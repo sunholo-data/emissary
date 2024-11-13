@@ -116,7 +116,7 @@ steps:
       - '--memory=2Gi'
       - '--cpu=1'
       - '--set-env-vars=LANGFUSE_HOST=https://langfuse.sunholo.com'
-      - '--update-secrets=LANGFUSE_SECRET_KEY=LANGFUSE_API_KEY_EMISSARY:latest'
+      - '--update-secrets=LANGFUSE_SECRET_KEY=LANGFUSE_SECRET_KEY_EMISSARY:latest'
       - '--update-secrets=LANGFUSE_PUBLIC_KEY=LANGFUSE_PUBLIC_KEY_EMISSARY:latest'
       - '--update-secrets=GOOGLE_API_KEY=GOOGLE_API_KEY:latest'
 
