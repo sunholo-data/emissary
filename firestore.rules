@@ -1,0 +1,138 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if document exists and has required fields
+    function hasRequiredChatFields(chatId) {
+      let chat = get(/databases/$(database)/documents/chatMessages/$(chatId));
+      return chat != null && 
+             chat.data != null && 
+             chat.data.adminEmail is string;
+    }
+    
+    // Check if user is admin
+    function isShareAdmin(chatId) {
+      let chat = get(/databases/$(database)/documents/chatMessages/$(chatId));
+      return chat != null && 
+             chat.data != null && 
+             chat.data.adminEmail == request.auth.token.email;
+    }
+
+    function isWelcomeAdmin() {
+      return isAuthenticated() && request.auth.token.email == "m@sunholo.com";
+    }
+
+    function isValidMessage() {
+      let incomingData = request.resource.data;
+      let requiredFields = ['userEmail', 'content', 'sender', 'timestamp', 'read'];
+      let optionalFields = ['userName', 'photoURL'];
+      let allowedFields = requiredFields.concat(optionalFields);
+      
+      return incomingData.keys().hasAll(requiredFields) &&
+             incomingData.keys().hasOnly(allowedFields) &&
+             incomingData.userEmail is string &&
+             incomingData.content is string &&
+             incomingData.sender in ['admin', 'receiver'] &&
+             incomingData.timestamp is number &&
+             incomingData.read is bool;
+    }
+
+    function isValidChatDocument() {
+      let incomingData = request.resource.data;
+      let requiredFields = ['adminEmail', 'botId'];
+      let optionalFields = ['botName', 'initialDocuments', 'metadata', 'senderName', 'recipientName', 'initialMessage', 'initialInstructions'];
+      let allowedFields = requiredFields.concat(optionalFields);
+      
+      return incomingData.keys().hasAll(requiredFields) &&
+             incomingData.keys().hasOnly(allowedFields) &&
+             incomingData.adminEmail is string &&
+             incomingData.botId is string;
+    }
+
+    // User configs and shares
+    match /userConfigs/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+      
+      match /shares/{shareId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if isOwner(userId);
+      }
+    }
+    
+    // Chat messages
+    match /chatMessages/{chatId} {
+      // Allow reading the document
+      allow read: if true;
+      
+      // Allow creating with proper structure
+      allow create: if isAuthenticated();
+      
+      match /messages/{messageId} {
+        // Allow reading all messages
+        allow read: if true;
+        
+        // Allow listing messages (for queries)
+        allow list: if true;
+        
+        allow create: if isAuthenticated() && 
+                     isValidMessage() && 
+                     hasRequiredChatFields(chatId) &&
+                     request.resource.data.userEmail == request.auth.token.email &&
+                     (
+                       (isShareAdmin(chatId) && request.resource.data.sender == 'admin') ||
+                       (!isShareAdmin(chatId) && request.resource.data.sender == 'receiver')
+                     );
+        
+        allow update: if isAuthenticated() && 
+                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        
+        allow delete: if isShareAdmin(chatId);
+      }
+    }
+
+    // Welcome bot special case
+    match /chatMessages/welcome-emissary {
+      allow read: if true;
+      allow create: if isWelcomeAdmin();
+      
+      match /messages/{messageId} {
+        // Allow reading all messages
+        allow read: if true;
+        
+        // Allow listing messages (for queries)
+        allow list: if true;
+        
+        allow create: if isAuthenticated() && 
+                     isValidMessage() && 
+                     request.resource.data.userEmail == request.auth.token.email &&
+                     (
+                       (isWelcomeAdmin() && request.resource.data.sender == 'admin') ||
+                       (!isWelcomeAdmin() && request.resource.data.sender == 'receiver')
+                     );
+        
+        allow update: if isAuthenticated() && (
+          isWelcomeAdmin() || 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        );
+        
+        allow delete: if isWelcomeAdmin();
+      }
+    }
+
+    // Bot configs
+    match /botConfigs/{botId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
+    }
+  }
+}

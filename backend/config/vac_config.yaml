@@ -1,0 +1,9 @@
+kind: vacConfig
+apiVersion: v1
+vac:
+  emissary:
+    agent: emissary
+    llm: openai
+    model: gemini-1.5-flash
+    display_name: Emissary
+    tags: ["emissary"]

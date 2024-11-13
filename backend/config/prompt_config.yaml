@@ -1,0 +1,132 @@
+kind: promptConfig
+apiVersion: v1
+prompts:
+  emissary:
+    system: |
+      You are an assistant with access to custom Markdown-like components for rendering content with emphasis, alerts, and data visualization in charts. Here’s how to use each component effectively:
+        1.	Highlighting Important Text
+      Use <highlight> to emphasize text with a highlighted background. You can specify a color if desired.
+        •	Syntax: <highlight color="#hexcolor">Text to highlight</highlight>
+        •	Example: <highlight color="#ffeb3b">This text is highlighted with a yellow background.</highlight>
+        2.	Creating Alerts
+      Use <alert> to display important alerts with context-appropriate colors and borders. The type determines the color:
+        •	Types:
+        •	default (blue) - General info.
+        •	error (red) - For errors or critical issues.
+        •	warning (yellow) - For warnings or caution.
+        •	success (green) - For success messages.
+        •	Syntax: <alert type="warning">This is a warning message.</alert>
+        •	Example: <alert type="error">An error occurred during processing.</alert>
+        3.	Creating Line Charts
+      Use <plot> to display data as line charts. Provide structured data and layout as JSON.
+        •	Data: Include an array of data points (x, y values) and series configurations.
+        •	Layout: Specify chart settings like grid, legend visibility, and axis labels.
+        •	Syntax:
+      <plot data='{"data":[{"x":1,"y":10},{"x":2,"y":20}],"series":[{"dataKey":"y"}]}' layout='{"title":"Sample Chart","xAxisLabel":"X-Axis","yAxisLabel":"Y-Axis"}'></plot>
+        •	Example:
+      <plot data='{"data":[{"x":1,"y":15},{"x":2,"y":25}],"series":[{"dataKey":"y","color":"#FF5733"}]}' layout='{"title":"Example Line Chart","xAxisLabel":"Time","yAxisLabel":"Value"}'></plot>
+      Use the tags in lowercase as shown and NEVER use backticks ``` to wrap them else they will not render properly
+    preview: |
+      Preview Component Instructions
+      The Preview component lets you display various file types including images, videos, audio, PDFs, and other files in your messages.
+      Basic Usage
+      The preview component requires two main props:
+
+      uri: The http URL (https://) to your file
+      type: The MIME type of the file
+      name: (Optional) A display name for the file
+
+      Examples By File Type
+
+      Images (jpg, png, webp):
+
+      Copy<preview uri="https://bucket/image.jpg" type="image/jpeg" name="Profile Photo" />
+      <preview uri="https://bucket/icon.png" type="image/png" name="App Icon" />
+      <preview uri="https://bucket/photo.webp" type="image/webp" name="Product Image" />
+
+      Audio Files (mp3, wav):
+
+      Copy<preview uri="https://bucket/song.mp3" type="audio/mp3" name="Background Music" />
+      <preview uri="https://bucket/sound.wav" type="audio/wav" name="Sound Effect" />
+
+      Video Files (mp4, webm):
+
+      Copy<preview uri="https://bucket/demo.mp4" type="video/mp4" name="Product Demo" />
+      <preview uri="https://bucket/clip.webm" type="video/webm" name="Tutorial Video" />
+
+      PDF Documents:
+
+      Copy<preview uri="https://bucket/doc.pdf" type="application/pdf" name="User Manual" />
+      Supported File Types
+
+      Images: jpeg, png, webp, heic, heif
+      Audio: mp3, wav, aiff, aac, ogg, flac
+      Video: mp4, mpeg, mov, avi, webm, wmv
+      Documents: pdf
+      Code: javascript, python, html, css
+      Text: plain, md, csv, xml, rtf
+
+      Multiple files:
+
+      Preview multiple files in the same <preview /> component by passing in a JSON string:
+      // Multiple files
+      <preview items='[
+        {
+          "uri": "https://firebasestorage.googleapis.com/v0/b/multivac-internal-dev.firebasestorage.app/o/users%2FUQcKi4u7scVyzlcqvG7aRDTPu063%2Fshares%2F160b3b11-076d-485e-a1ad-58b7bcd76de5%2Fdocuments%2F2de6aa68-e627-441c-967e-64980c17dcdc.pdf?alt=media&token=e654ef4d-9f7c-45e7-8ca8-0663c9242780",
+          "type": "application/pdf",
+          "name": "attentionisallyouneed"
+        },
+        {
+          "uri": "https://firebasestorage.googleapis.com/v0/b/multivac-internal-dev.firebasestorage.app/o/users%2FUQcKi4u7scVyzlcqvG7aRDTPu063%2Fshares%2F160b3b11-076d-485e-a1ad-58b7bcd76de5%2Fdocuments%2F1bbe579f-49e3-4116-9c0f-97897c50dc9e.png?alt=media&token=e0fe2e49-2242-4ff7-b6e9-183874bf756f",
+          "type": "image/png",
+          "name": "llmarchitecturewithmemorygcp"
+        },
+        {
+          "uri": "https://firebasestorage.googleapis.com/v0/b/multivac-internal-dev.firebasestorage.app/o/users%2FUQcKi4u7scVyzlcqvG7aRDTPu063%2Fshares%2F160b3b11-076d-485e-a1ad-58b7bcd76de5%2Fdocuments%2F33038b17-9e84-439b-a91c-a61aaf6fe929.mp3?alt=media&token=6a02f56f-555f-45a3-a393-92a1c71f8e62",
+          "type": "audio/mpeg",
+          "name": "cognitivedesign"
+        }
+      ]' />
+
+      DO NOT pass multiple <preview /> components in the same reply - it won't render all the files.  
+      Use the multiple files support instead in one <preview /> component.
+
+      Best Practices
+
+      Always use the correct MIME type for proper preview rendering
+      Include descriptive names for better accessibility
+      Verify files are uploaded before referencing them
+
+      Common Use Cases
+
+      Product Images:
+
+      <preview uri="https://bucket/product-front.webp" type="image/webp" name="Front View" />
+      <preview uri="https://bucket/product-side.webp" type="image/webp" name="Side View" />
+
+      Learning Materials:
+
+      <preview uri="https://bucket/manual.pdf" type="application/pdf" name="Installation Guide" />
+      <preview uri="https://bucket/lesson1.mp4" type="video/mp4" name="Getting Started" />
+
+      Code Examples:
+
+      <preview uri="https://bucket/sample.py" type="text/x-python" name="Python Example" />
+      <preview uri="https://bucket/styles.css" type="text/css" name="CSS Styles" />
+    tooltips: |
+      To add tooltips to your content, use the tooltip component.
+      The tooltip component supports these positions:
+      - top (default)
+      - bottom
+      - left
+      - right
+      Tips for using tooltips effectively:
+      - Keep tooltip text concise and helpful
+      - Use tooltips to explain UI elements or provide additional context
+      - Position tooltips logically (e.g., "right" for next actions, "left" for previous)
+      - Avoid putting interactive elements inside tooltips
+      Common use cases:
+      - Explaining icons: `<tooltip text="Settings"><icon>⚙️</icon></tooltip>`
+      - Link descriptions: `<tooltip text="Opens in new tab">External link</tooltip>`
+      - Form field hints: `<tooltip text="Enter your full legal name">Name *</tooltip>`
+      - Abbreviation explanations: `<tooltip text="National Aeronautics and Space Administration">NASA</tooltip>`

@@ -1,0 +1,132 @@
+substitutions:
+  _SERVICE_NAME: uimessenger
+  _BUILD_FOLDER: application/ui/messenger/messenger
+  _REGION: terraform_managed
+  _ARTIFACT_REGISTRY_REPO_URL: terraform_managed
+  _PROJECT_ID: terraform_managed
+
+tags: ['${_PROJECT_ID}', '${_SERVICE_NAME}']
+
+options:
+  logging: GCS_ONLY
+logsBucket: gs://multivac-deploy-logging-bucket
+
+steps:
+  - name: '${_ARTIFACT_REGISTRY_REPO_URL}/sunholo-llmops/firebase:${BRANCH_NAME}'
+    dir: ${_BUILD_FOLDER}
+    waitFor: ['-']
+    id: 'deploy-firebase-rules'
+    entrypoint: bash
+    args: 
+      - '-c'
+      - |
+        firebase && 
+        firebase -P ${_PROJECT_ID} --json deploy --only firestore:rules
+
+  # Get Firebase config from Secret Manager and parse it
+  - name: 'gcr.io/cloud-builders/gcloud'
+    dir: ${_BUILD_FOLDER}
+    id: 'get-firebase-config'
+    waitFor: ['-']
+    entrypoint: 'bash'
+    args: 
+    - './get-firebase-config.sh'
+    env:
+    - '_PROJECT_ID=$_PROJECT_ID'
+ 
+  # Build the UI container with Firebase config
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build-ui
+    entrypoint: 'bash'
+    waitFor: ['get-firebase-config']
+    args:
+      - '-c'
+      - |
+        ARGS=$$(cat /workspace/docker_args)
+        docker build $$ARGS -t ${_ARTIFACT_REGISTRY_REPO_URL}/${_SERVICE_NAME}/ui:${BRANCH_NAME} .
+    dir: ${_BUILD_FOLDER}
+    waitFor: ['get-firebase-config']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    id: backend-dockerfile
+    dir: ${_BUILD_FOLDER}/backend
+    waitFor: ['-']
+    args:
+    - '-c'
+    - |
+      cat <<EOF >Dockerfile_cloudrun
+      FROM python:3.10-slim
+      
+      WORKDIR /app
+
+      COPY . .
+
+      EXPOSE 1956
+
+      RUN pip install --upgrade -r requirements.txt && pip list && python --version
+
+      ENV VAC_CONFIG_FOLDER=/gcs_config/config
+      ENV GOOGLE_CLOUD_LOGGING=1
+
+      CMD exec gunicorn --bind :1956 --workers 4 --timeout 0 app:app
+      EOF
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build-backend
+    waitFor: ['backend-dockerfile']
+    dir: ${_BUILD_FOLDER}/backend
+    args: ['build', '-t', '${_ARTIFACT_REGISTRY_REPO_URL}/${_SERVICE_NAME}/backend:${BRANCH_NAME}', '-f', 'Dockerfile_cloudrun', '.', '--network=cloudbuild']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push-backend
+    waitFor: ['build-backend']
+    dir: ${_BUILD_FOLDER}/backend
+    args: ['push', '${_ARTIFACT_REGISTRY_REPO_URL}/${_SERVICE_NAME}/backend:${BRANCH_NAME}']
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push-ui
+    waitFor: ['build-ui']
+    dir:  ${_BUILD_FOLDER}
+    args: ['push', '${_ARTIFACT_REGISTRY_REPO_URL}/${_SERVICE_NAME}/ui:${BRANCH_NAME}']
+  
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    dir:  ${_BUILD_FOLDER}
+    entrypoint: gcloud
+    waitFor: ['push-ui', 'push-backend']
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--service-account=sa-googlegenai@multivac-internal-${BRANCH_NAME}.iam.gserviceaccount.com'
+      - '--region=${_REGION}'  
+      - '--project=${_PROJECT_ID}'
+      - '--platform=managed'
+      - '--allow-unauthenticated' 
+      - '--max-instances=3'
+      - '--session-affinity'
+      - '--add-volume'
+      - 'name=gcs_config,type=cloud-storage,bucket=${_CONFIG_BUCKET},readonly=true'
+      - '--container=ui'
+      - '--image=${_ARTIFACT_REGISTRY_REPO_URL}/${_SERVICE_NAME}/ui:${BRANCH_NAME}'
+      - '--port=8080'
+      - '--memory=2Gi'
+      - '--cpu=1'
+      - '--container=backend'
+      - '--image=${_ARTIFACT_REGISTRY_REPO_URL}/${_SERVICE_NAME}/backend:${BRANCH_NAME}'
+      - '--add-volume-mount'
+      - 'volume=gcs_config,mount-path=/gcs_config'
+      - '--memory=2Gi'
+      - '--cpu=1'
+      - '--update-secrets=LANGFUSE_HOST=LANGFUSE_URL:latest'
+      - '--update-secrets=LANGFUSE_SECRET_KEY=LANGFUSE_API_KEY:latest'
+      - '--update-secrets=LANGFUSE_PUBLIC_KEY=LANGFUSE_PUBLIC_KEY:latest'
+      - '--update-secrets=GOOGLE_API_KEY=GOOGLE_API_KEY:latest'
+
+
+
+
+
+
