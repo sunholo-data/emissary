@@ -1,4 +1,4 @@
-from my_log import log
+from my_log import log, langfuse
 from sunholo.utils import ConfigManager
 from sunholo.invoke import AsyncTaskRunner
 import asyncio
@@ -18,9 +18,19 @@ def format_human_chat_history(chat_history):
 
 def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, **kwargs):
 
+    config = ConfigManager(vector_name)
+
+    trace_id = None
+    trace = None
+    if kwargs.get("trace_id") is not None:
+        trace_id = kwargs.get('trace_id')
+        trace = langfuse.trace(id=trace_id, name="emissary")
+        trace_id=trace.id
+        log.info(f"Got langfuse trace: {trace_id}")
+
     instructions = kwargs.get('instructions')
     documents = kwargs.get('documents')
-    model = create_model(vector_name, instructions=instructions)
+    model = create_model(config, instructions=instructions)
     humanChatHistory = kwargs.get('humanChatHistory')
 
     contents = []
@@ -66,15 +76,18 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     metadata = {
         "question": question,
         "vector_name": vector_name,
-        "chat_history": chat_history
+        "contents": contents,
     }
+
+    trace.update(
+        output=chunks, metadata=metadata
+    )
 
     # to not return this dict at the end of the stream, pass stream_only: true in request
     return {"answer": chunks, "metadata": metadata}
 
 
-def create_model(vac, instructions=None):
-    config = ConfigManager(vac)
+def create_model(config, instructions=None):
 
     init_genai()
 
