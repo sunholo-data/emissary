@@ -63,6 +63,7 @@ steps:
 
       RUN pip install --upgrade -r requirements.txt && pip list && python --version
 
+      ENV _CONFIG_FOLDER=/gcs_config
       ENV VAC_CONFIG_FOLDER=/gcs_config/config
       ENV GOOGLE_CLOUD_LOGGING=1
 
@@ -103,12 +104,12 @@ steps:
       - '--session-affinity'
       - '--add-volume'
       - 'name=gcs_config,type=cloud-storage,bucket=${_CONFIG_BUCKET},readonly=true'
-      - '--container=ui'
+      - '--container=main'
       - '--image=${_ARTIFACT_REGISTRY_REPO_URL}/${_SERVICE_NAME}/ui:${BRANCH_NAME}'
       - '--port=8080'
       - '--memory=2Gi'
       - '--cpu=1'
-      - '--container=backend'
+      - '--container=sidecar'
       - '--image=${_ARTIFACT_REGISTRY_REPO_URL}/${_SERVICE_NAME}/backend:${BRANCH_NAME}'
       - '--add-volume-mount'
       - 'volume=gcs_config,mount-path=/gcs_config'
