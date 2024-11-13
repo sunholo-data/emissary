@@ -1,7 +1,7 @@
 substitutions:
-  _SERVICE_NAME: uimessenger
-  _BUILD_FOLDER: application/ui/messenger/messenger
+  _SERVICE_NAME: emissary
   _REGION: terraform_managed
+  _BUILD_FOLDER: .
   _ARTIFACT_REGISTRY_REPO_URL: terraform_managed
   _PROJECT_ID: terraform_managed
 
@@ -13,7 +13,6 @@ logsBucket: gs://multivac-deploy-logging-bucket
 
 steps:
   - name: '${_ARTIFACT_REGISTRY_REPO_URL}/sunholo-llmops/firebase:${BRANCH_NAME}'
-    dir: ${_BUILD_FOLDER}
     waitFor: ['-']
     id: 'deploy-firebase-rules'
     entrypoint: bash
@@ -25,7 +24,6 @@ steps:
 
   # Get Firebase config from Secret Manager and parse it
   - name: 'gcr.io/cloud-builders/gcloud'
-    dir: ${_BUILD_FOLDER}
     id: 'get-firebase-config'
     waitFor: ['-']
     entrypoint: 'bash'
@@ -44,7 +42,6 @@ steps:
       - |
         ARGS=$$(cat /workspace/docker_args)
         docker build $$ARGS -t ${_ARTIFACT_REGISTRY_REPO_URL}/${_SERVICE_NAME}/ui:${BRANCH_NAME} .
-    dir: ${_BUILD_FOLDER}
     waitFor: ['get-firebase-config']
 
   - name: 'gcr.io/cloud-builders/docker'
@@ -88,12 +85,10 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     id: push-ui
     waitFor: ['build-ui']
-    dir:  ${_BUILD_FOLDER}
     args: ['push', '${_ARTIFACT_REGISTRY_REPO_URL}/${_SERVICE_NAME}/ui:${BRANCH_NAME}']
   
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    dir:  ${_BUILD_FOLDER}
     entrypoint: gcloud
     waitFor: ['push-ui', 'push-backend']
     args:
