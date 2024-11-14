@@ -19,6 +19,61 @@ Under the hood, the Emissary is powered by Gemini 1.5 on the Sunholo Multivac pl
 
 ## Install
 
+## Firebase setup
+
+You can choose to use firebase emulation locally or setup your own cloud firebase at https://console.firebase.google.com
+
+Go there and find the products below, and set them up as you prefer such as location.
+
+### Create a new web app
+
+Create a new web app in your Firebase project to generate your Firestore Ids. You don't need hosting. 
+
+### Specify the admin
+
+This email when logged in will be the super-admin e.g. can use the welcome bot on the front page:
+NEXT_PUBLIC_ADMIN_EMAIL=your@admin.com
+
+### Create a .env.local file
+
+Put the details it will generate in `.env.local` for local development and copy them up to the `FIREBASE_ENV` secret on Secret Manager to use in deployments.  It should look something like this (see also `env.local.example` - rename it to `.env.local` for use)
+
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXX
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123123123123
+NEXT_PUBLIC_FIREBASE_APP_ID=1:123123123123:web:ebXXXXddceXXXX
+NEXT_PUBLIC_ADMIN_EMAIL=your@admin.com
+```
+
+### Firebase authentication
+
+To use the OAuth2 login or email/password you need to activate them in the Firebase console. See https://firebase.google.com/docs/auth/
+
+At the moment Email/Password, Google and GitHub are supported.
+
+You should see this once done
+
+![](docs/img/firebase-auth-setup.png)
+
+### Firestore
+
+Activate the Firestore service.  You can start it in dev or prod mode.
+
+### Storage
+
+Activate the storage service.  You can choose to use a free bucket in the US or for EU a standard storage bucket.
+
+### Firestore Rules and Indexes
+
+Firestore rules and indexes and Cloud Storage rules are deployed in the cloud build, or by issuing:
+
+```sh
+firebase -P <your-project> --json deploy --only firestore:rules,firestore:indexes,storage
+```
+
 
 
 ## Development setup
@@ -45,7 +100,7 @@ The app will launch locally at http://127.0.0.1:3000/ and the Firestore emulator
 
 ## Creating initial Emissary Templates
 
-To see the initial Emissary templates they need to uploaded to the Firestore.  The script to do this is in `src/scripts/seed.mjs`
+To seed the initial Emissary templates they need to uploaded to the Firestore.  The script to do this is in `src/scripts/seed.mjs`
 
 ```bash
 # it takes the project it will seed from gcloud
@@ -87,13 +142,7 @@ By default if the template already exists it will not overwrite it.  To force ov
 npm run seed:force
 ```
 
-## Firestore Rules and Indexes
 
-Firestore rules and indexes and Cloud Storage rules are deployed in the cloud build, or by issuing:
-
-```sh
-firebase -P <your-project> --json deploy --only firestore:rules,firestore:indexes,storage
-```
 
 
 ## License
