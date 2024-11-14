@@ -1,11 +1,21 @@
-# Messenger
+# Emissary
 
-Its two containers python backend React UI.
-https://uimessenger-374404277595.europe-west1.run.app
+Emissary is an AI assisted messenger service that can beused to create an Emissary to speak on your behalf.
 
-But...its not in VPC (so no AlloydB?) due to not able to bootstrap via terraform (deleting cloud run bootstrap to deploy at the moment)
+Emissaries are generated with a unique link that can be sent to the reciever.  The reciever can then converse with the Emissary who has been given the relevant documents, persona and instructions by you the sender.  Recievers can then reply to you or the Emissary.
 
-TODO: add a terraform bootstrap for multi-container cloud run
+The Emissary is designed to be able to help the reciever in understanding your needs, based on the information you have given it.  Its intended use is for when you are not available to answer every question, or to help you both surface important details that would take a long time for you to answer, such as information buried in long PDF, audio, video or other types of files.
+
+The Emissaries are not intended as generalists.  Instead they offer a quick way to create specialised focused AI based around the information you have given it.
+
+Tool that the Emissary can use to help faciliate the conversation are:
+
+* Custom React Components that can be used to illustrate points, such as <plot />, <highlight /> and <preview />
+* Ability to import various document types including PDFs, text, code bases, audio and video files etc.
+* Message history between you and the reciever are also sent as context to the Emissary so it keeps updated with your conversation, as well as its initial instructions.
+
+Under the hood, the Emissary is powered by Gemini 1.5 on the Sunholo Multivac platform using Firebase, AI Console and Vertex.  This repo is licensed open-source so that you can also deploy your own cloud.
+
 
 ## Install
 
@@ -52,7 +62,8 @@ Emulators work when `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` which the above sc
 
 The app will launch locally at http://127.0.0.1:3000/ and the Firestore emulators are locally at http://127.0.0.1:4000/
 
-## deploy
+
+## Creating initial Emissary Templates
 
 set to right project
 

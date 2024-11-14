@@ -30,9 +30,14 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
 
     instructions = kwargs.get('instructions')
     documents = kwargs.get('documents')
-    model = create_model(config, instructions=instructions)
+    model = create_model(config, instructions=instructions, trace_id=trace_id)
     humanChatHistory = kwargs.get('humanChatHistory')
 
+    span = langfuse.span(
+        trace_id=trace_id,
+        name="content",
+        input={"question": question, "chat_history": chat_history, "kwargs": kwargs},
+    )
     contents = []
     
     if humanChatHistory:
@@ -57,8 +62,15 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
         if ai:
             contents.append({"role":"model", "parts":[{"text": ai}]})
 
+    span.end(output = contents)
     log.info(contents)
+    model_name = config.vacConfig("model", "gemini-1.5-flash")
 
+    gen = trace.generation(
+        name="generate",
+        model=model_name,
+        input=contents,
+    )
     response = model.generate_content(contents, stream=True)
     chunks=""
     for chunk in response:
@@ -72,6 +84,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     # stream has finished, full response is also returned
     callback.on_llm_end(response=response)
     log.info(f"model.response: {response}")
+    gen.end(output=chunks)
 
     metadata = {
         "question": question,
@@ -87,7 +100,13 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     return {"answer": chunks, "metadata": metadata}
 
 
-def create_model(config, instructions=None):
+def create_model(config, instructions=None, trace_id=None):
+
+    span = langfuse.span(
+        trace_id=trace_id,
+        name="system_instructions",
+        input={"instructions": instructions},
+    )
 
     init_genai()
 
@@ -341,6 +360,7 @@ Code Examples:
     """
     prompt = f"{instructions} {tag_prompt} {plot_prompt} {tooltip_prompt} {preview_prompt}"
 
+    span.end(output=prompt)
     # Create a gemini-pro model instance
     # https://ai.google.dev/api/python/google/generativeai/GenerativeModel#streaming
     genai_model = genai.GenerativeModel(
