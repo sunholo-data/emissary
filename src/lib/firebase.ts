@@ -574,7 +574,7 @@ export function initFirebase() {
         // Non-admins only see their own messages and admin messages
         q = query(
           messagesRef,
-          where('userEmail', 'in', [userEmail, 'm@sunholo.com']), // Replace with actual admin email
+          where('userEmail', 'in', [userEmail, process.env.NEXT_PUBLIC_ADMIN_EMAIL]), // Replace with actual admin email
           orderBy('timestamp', 'asc')
         );
       }
@@ -714,12 +714,12 @@ export function initFirebase() {
 
     // For the welcome bot, admins see everything, others see only their messages and admin messages
     if (shareId === 'welcome-emissary') {
-      if (isAdmin && userEmail === 'm@sunholo.com') {
+      if (isAdmin && userEmail === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
         return query(messagesRef, orderBy('timestamp', 'asc'));
       }
       return query(
         messagesRef,
-        where('userEmail', 'in', [userEmail, 'm@sunholo.com']),
+        where('userEmail', 'in', [userEmail, process.env.NEXT_PUBLIC_ADMIN_EMAIL]),
         orderBy('timestamp', 'asc')
       );
     }
@@ -738,7 +738,7 @@ export function initFirebase() {
     return query(
       messagesRef,
       where('shareId', '==', shareId),
-      where('userEmail', 'in', [userEmail, 'm@sunholo.com']),
+      where('userEmail', 'in', [userEmail, process.env.NEXT_PUBLIC_ADMIN_EMAIL]),
       orderBy('timestamp', 'asc')
     );
   }
@@ -939,7 +939,7 @@ export function initFirebase() {
         botName: "Emissary Helper",
         senderName: "Mark Edmondson",
         recipientName: "Everyone",
-        adminEmail: "m@sunholo.com",
+        adminEmail: process.env.NEXT_PUBLIC_ADMIN_EMAIL,
         initialDocuments: [],
         metadata: {
           createdAt: Date.now(),

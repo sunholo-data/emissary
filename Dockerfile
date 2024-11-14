@@ -11,6 +11,7 @@ ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
 ARG NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
 ARG NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 ARG NEXT_PUBLIC_FIREBASE_APP_ID
+ARG NEXT_PUBLIC_ADMIN_EMAIL
 
 # Set them as environment variables for the build
 ENV NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY
@@ -19,6 +20,7 @@ ENV NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID
 ENV NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
 ENV NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
+ENV NEXT_PUBLIC_ADMIN_EMAIL=$NEXT_PUBLIC_ADMIN_EMAIL
 
 # Copy package files
 COPY package*.json ./
@@ -42,21 +44,12 @@ WORKDIR /app
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/static ./static
 
-# Copy all required Next.js files
+# Copy only required Next.js files
 COPY --from=builder /app/.next/BUILD_ID ./.next/
 COPY --from=builder /app/.next/build-manifest.json ./.next/
-COPY --from=builder /app/.next/app-build-manifest.json ./.next/
-COPY --from=builder /app/.next/app-path-routes-manifest.json ./.next/
-COPY --from=builder /app/.next/prerender-manifest.json ./.next/
-COPY --from=builder /app/.next/prerender-manifest.js ./.next/
 COPY --from=builder /app/.next/routes-manifest.json ./.next/
-COPY --from=builder /app/.next/images-manifest.json ./.next/
 COPY --from=builder /app/.next/required-server-files.json ./.next/
-COPY --from=builder /app/.next/react-loadable-manifest.json ./.next/
-COPY --from=builder /app/.next/export-marker.json ./.next/
-COPY --from=builder /app/.next/package.json ./.next/
 
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
