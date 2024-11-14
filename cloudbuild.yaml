@@ -69,6 +69,8 @@ steps:
 
       CMD exec gunicorn --bind :1956 --workers 4 --timeout 0 app:app
       EOF
+      
+      cat Dockerfile_cloudrun
 
   - name: 'gcr.io/cloud-builders/docker'
     id: build-backend

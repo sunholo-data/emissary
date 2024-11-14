@@ -157,6 +157,11 @@ By default if the template already exists it will not overwrite it.  To force ov
 npm run seed:force
 ```
 
+By default it uses the project specified in .env.local `NEXT_PUBLIC_FIREBASE_PROJECT_ID` but you can override that with:
+
+```sh
+node src/scripts/seed.mjs --project-id=your-project-id --force
+```
 
 ## License
 
