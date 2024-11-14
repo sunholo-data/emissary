@@ -1,6 +1,6 @@
 # Emissary
 
-Emissary is an AI assisted messenger service that can beused to create an Emissary to speak on your behalf.
+Emissary is an AI assisted messenger service that can be used to create an Emissary to speak on your behalf.
 
 Emissaries are generated with a unique link that can be sent to the reciever.  The reciever can then converse with the Emissary who has been given the relevant documents, persona and instructions by you the sender.  Recievers can then reply to you or the Emissary.
 
@@ -10,7 +10,7 @@ The Emissaries are not intended as generalists.  Instead they offer a quick way 
 
 Tool that the Emissary can use to help faciliate the conversation are:
 
-* Custom React Components that can be used to illustrate points, such as <plot />, <highlight /> and <preview />
+* Custom React Components that can be used to illustrate points, such as `<plot />`, `<highlight />` and `<preview />`
 * Ability to import various document types including PDFs, text, code bases, audio and video files etc.
 * Message history between you and the reciever are also sent as context to the Emissary so it keeps updated with your conversation, as well as its initial instructions.
 
