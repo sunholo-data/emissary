@@ -64,7 +64,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
 
     span.end(output = contents)
     log.info(contents)
-    model_name = config.vacConfig("model", "gemini-1.5-flash")
+    model_name = config.vacConfig("model") or "gemini-1.5-flash"
 
     gen = trace.generation(
         name="generate",

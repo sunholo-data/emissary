@@ -1,6 +1,6 @@
 # Emissary
 
-Emissary is an AI assisted messenger service that can beused to create an Emissary to speak on your behalf.
+Emissary is an AI assisted messenger service that can be used to create an Emissary to speak on your behalf.
 
 Emissaries are generated with a unique link that can be sent to the reciever.  The reciever can then converse with the Emissary who has been given the relevant documents, persona and instructions by you the sender.  Recievers can then reply to you or the Emissary.
 
@@ -10,7 +10,7 @@ The Emissaries are not intended as generalists.  Instead they offer a quick way 
 
 Tool that the Emissary can use to help faciliate the conversation are:
 
-* Custom React Components that can be used to illustrate points, such as <plot />, <highlight /> and <preview />
+* Custom React Components that can be used to illustrate points, such as `<plot />`, `<highlight />` and `<preview />`
 * Ability to import various document types including PDFs, text, code bases, audio and video files etc.
 * Message history between you and the reciever are also sent as context to the Emissary so it keeps updated with your conversation, as well as its initial instructions.
 
@@ -101,3 +101,19 @@ npm run seed:force
 
 Need to create firestore index for chat message history eg.
 https://console.firebase.google.com/v1/r/project/multivac-internal-dev/firestore/indexes?create_composite=ClZwcm9qZWN0cy9tdWx0aXZhYy1pbnRlcm5hbC1kZXYvZGF0YWJhc2VzLyhkZWZhdWx0KS9jb2xsZWN0aW9uR3JvdXBzL21lc3NhZ2VzL2luZGV4ZXMvXxABGggKBHJlYWQQARoNCgl1c2VyRW1haWwQARoMCghfX25hbWVfXxAB
+
+## License
+
+Copyright [2024] Holosun ApS
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
