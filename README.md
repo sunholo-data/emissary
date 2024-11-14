@@ -101,3 +101,19 @@ npm run seed:force
 
 Need to create firestore index for chat message history eg.
 https://console.firebase.google.com/v1/r/project/multivac-internal-dev/firestore/indexes?create_composite=ClZwcm9qZWN0cy9tdWx0aXZhYy1pbnRlcm5hbC1kZXYvZGF0YWJhc2VzLyhkZWZhdWx0KS9jb2xsZWN0aW9uR3JvdXBzL21lc3NhZ2VzL2luZGV4ZXMvXxABGggKBHJlYWQQARoNCgl1c2VyRW1haWwQARoMCghfX25hbWVfXxAB
+
+## License
+
+Copyright [2024] Holosun ApS
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
