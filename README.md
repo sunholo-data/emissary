@@ -32,11 +32,11 @@ Create a new web app in your Firebase project to generate your Firestore Ids. Yo
 ### Specify the admin
 
 This email when logged in will be the super-admin e.g. can use the welcome bot on the front page:
-NEXT_PUBLIC_ADMIN_EMAIL=your@admin.com
+`NEXT_PUBLIC_ADMIN_EMAIL=your@admin.com`
 
 ### Create a .env.local file
 
-Put the details it will generate in `.env.local` for local development and copy them up to the `FIREBASE_ENV` secret on Secret Manager to use in deployments.  It should look something like this (see also `env.local.example` - rename it to `.env.local` for use)
+Put the details it will generate in `.env.local` for local development and copy them up to the `FIREBASE_ENV` secret on Secret Manager to use in deployments.  It should look something like this (see also [`env.local.example`](env.local.example) - rename it to `.env.local` for use)
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXX
@@ -74,24 +74,22 @@ Firestore rules and indexes and Cloud Storage rules are deployed in the cloud bu
 firebase -P <your-project> --json deploy --only firestore:rules,firestore:indexes,storage
 ```
 
-
-
 ## Development setup
 
 ```sh
 npm run dev # or dev:cloud - see below
 ```
 
-	•	`dev` This is the main development script. It starts the Firebase emulators, the python backend app and the Next.js app in parallel. This way, you’ll be using the emulators when running the dev command.
-	•	`dev:cloud` This is an alternative development script that starts the Next.js dev server and python backend without the local Firebase emulators. This allows you to develop locally but use the Firebase cloud services.
-	•	`start:emulators` This runs the Firebase emulators. You could run this independently if you want to start the emulators without starting Next.js.
-  * `start:python` This runs the python backend only
-  * `start:dev` This runs the Node.js app
+*	`dev` This is the main development script. It starts the Firebase emulators, the python backend app and the Next.js app in parallel. This way, you’ll be using the emulators when running the dev command.
+*	`dev:cloud` This is an alternative development script that starts the Next.js dev server and python backend without the local Firebase emulators. This allows you to develop locally but use the Firebase cloud services.
+*	`start:emulators` This runs the Firebase emulators. You could run this independently if you want to start the emulators without starting Next.js.
+* `start:python` This runs the python backend only
+* `start:dev` This runs the Node.js app
 
 Usual Usage
 
-	•	Local Development with Emulators: Run `npm run dev`. This will start the emulators alongside your Next.js app.
-	•	Local Development with Cloud Services: Run `npm run dev:cloud`. This will start the Next.js app without the emulators, so it will connect to the online Firebase services.
+*	Local Development with Emulators: Run `npm run dev`. This will start the emulators alongside your Next.js app.
+*	Local Development with Cloud Services: Run `npm run dev:cloud`. This will start the Next.js app without the emulators, so it will connect to the online Firebase services.
 
 Emulators are used when `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` in your `.env.local` or passed during startup, which the above scripts set if needed.
 
@@ -100,7 +98,7 @@ The app will launch locally at http://127.0.0.1:3000/ and the Firestore emulator
 
 ## Creating initial Emissary Templates
 
-To seed the initial Emissary templates they need to uploaded to the Firestore.  The script to do this is in `src/scripts/seed.mjs`
+To seed the initial Emissary templates they need to be added to Firestore.  The script to do this is in [`src/scripts/seed.mjs`](src/scripts/seed.mjs).
 
 ```bash
 # it takes the project it will seed from gcloud
@@ -108,32 +106,49 @@ gcloud config set project your-firebase-project
 npm run seed
 ```
 
-This will add template bots to Firestore.  Modify the below `INITIAL_TEMPLATES` array in the `src/scripts/seed.mjs` script to alter them.
+Which runs similar to this:
 
-```js
-const INITIAL_TEMPLATES = {
-  multivac: {
-    name: "Emissary Helper",
-    avatar: "/images/avatars/emissary.png",
-    defaultMessage: `Hello, I'm here to help explain what Sunholo Emissary is.  Ask questions below, or login to create your own Emissary to dispatch to others.`,
-    defaultInstructions: `You are named Sunholo Emissary.  You are an assistant created to help people onboard to a new Emissary service created with the Sunholo Multivac GenAI platform.  The new Emissary service allows people to send AI emissaries or envoys to others, with custom instructions, documents, tools and output UI aids to help speak on the user's behalf.`,
-    isTemplate: true
-  },
-  aitana: {
-    name: "Aitana",
-    avatar: "/images/avatars/aitana.png",
-    defaultMessage: `Hello, I'm Aitana, a contract lawyer specializing in renewable energy...`,
-    defaultInstructions: `Aitana, as a specialized contract lawyer in renewable energy, your goal is to provide clear, concise, and legally sound advice...`,
-    isTemplate: true
-  },
-  hermes: {
-    name: "Hermes",
-    avatar: "/images/avatars/hermes.png",
-    defaultMessage: `Greetings, I am Hermes, your appointed messenger...`,
-    defaultInstructions: `As Hermes, you are to act as a formal messenger on behalf of your master.  Drop references to the greek gods and myths whenever you can.`,
-    isTemplate: true
-  }
-};
+```sh
+Loading templates from YAML...
+Checking existing templates...
+Found existing templates:
+- Aitana (ID: c90e19f9-c394-4e71-939c-7b3648e90381)
+- Hermes (ID: dc4053f6-8f7f-4b10-aea1-8eaf1e6794ee)
+- Emissary Helper (ID: e53df968-8cf3-46e1-adb1-772cf11af98b)
+
+Starting bot template seeding...
+Updating template multivac with ID: e53df968-8cf3-46e1-adb1-772cf11af98b
+Updating template aitana with ID: c90e19f9-c394-4e71-939c-7b3648e90381
+Updating template hermes with ID: dc4053f6-8f7f-4b10-aea1-8eaf1e6794ee
+Committing batch...
+Bot template seeding completed successfully!
+Updated templates: multivac, aitana, hermes
+Seeding completed successfully
+```
+
+This will add template bots to Firestore.  
+
+Modify the configuration in the [`src/scripts/templates.yaml`](src/scripts/templates.yaml) script to alter them.
+
+```yaml
+templates:
+  multivac:
+    name: "Emissary Helper"
+    avatar: "/images/avatars/emissary.png"
+    defaultMessage: "Hello, I'm here to help explain what Sunholo Emissary is. Ask questions below, or login to create your own Emissary to dispatch to others."
+    defaultInstructions: "You are named Sunholo Emissary. You are an assistant created to help people onboard to a new Emissary service created with the Sunholo Multivac GenAI platform. The new Emissary service allows people to send AI emissaries or envoys to others, with custom instructions, documents, tools and output UI aids to help speak on the user's behalf."
+
+  aitana:
+    name: "Aitana"
+    avatar: "/images/avatars/aitana.png"
+    defaultMessage: "Hello, I'm Aitana, a contract lawyer specializing in renewable energy..."
+    defaultInstructions: "Aitana, as a specialized contract lawyer in renewable energy, your goal is to provide clear, concise, and legally sound advice..."
+
+  hermes:
+    name: "Hermes"
+    avatar: "/images/avatars/hermes.png"
+    defaultMessage: "Greetings, I am Hermes, your appointed messenger..."
+    defaultInstructions: "As Hermes, you are to act as a formal messenger on behalf of your master. Drop references to the greek gods and myths whenever you can."
 ```
 
 By default if the template already exists it will not overwrite it.  To force overwrites, use `seed:force` instead.
@@ -141,8 +156,6 @@ By default if the template already exists it will not overwrite it.  To force ov
 ```sh
 npm run seed:force
 ```
-
-
 
 
 ## License
