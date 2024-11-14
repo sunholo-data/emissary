@@ -20,7 +20,7 @@ steps:
       - '-c'
       - |
         firebase && 
-        firebase -P ${_PROJECT_ID} --json deploy --only firestore:rules
+        firebase -P ${_PROJECT_ID} --json deploy --only firestore:rules,firestore:indexes,storage
 
   # Get Firebase config from Secret Manager and parse it
   - name: 'gcr.io/cloud-builders/gcloud'
