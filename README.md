@@ -19,63 +19,51 @@ Under the hood, the Emissary is powered by Gemini 1.5 on the Sunholo Multivac pl
 
 ## Install
 
-https://ui.shadcn.com/docs/installation/next
 
-```bash
-npx create-next-app@latest file-chat --typescript --tailwind --eslint
-cd file-chat
-npx shadcn-ui@latest init
-npx shadcn-ui@latest add button
-npx shadcn-ui@latest add input
-npx shadcn-ui@latest add scroll-area
-npx shadcn-ui@latest add tabs
-npx shadcn-ui@latest add checkbox
-npx shadcn-ui@latest add badge
-npx shadcn@latest add select
-```
-
-Replace `src/app/page.tsx` with code from `https://v0.dev/chat/mhkDddo3Uwk` but set `"use client";` at top of it
-
-## dev
-
-`npm run dev`
-
-For firebase local development
-
-```
-npm install -g firebase-tools
-firebase init emulators
-```
 
 ## Development setup
 
-	•	`dev:` This is the main development script. It starts the Firebase emulators and your Next.js app in parallel. This way, you’ll be using the emulators when running the dev command.
-	•	`dev:cloud:` This is an alternative development script that starts only the Next.js dev server without the emulators. This allows you to develop locally but use the Firebase cloud services.
-	•	`start:emulators:` This runs the Firebase emulators. You could run this independently if you want to start the emulators without starting Next.js.
+```sh
+npm run dev # or dev:cloud - see below
+```
 
-Usage
+	•	`dev` This is the main development script. It starts the Firebase emulators, the python backend app and the Next.js app in parallel. This way, you’ll be using the emulators when running the dev command.
+	•	`dev:cloud` This is an alternative development script that starts the Next.js dev server and python backend without the local Firebase emulators. This allows you to develop locally but use the Firebase cloud services.
+	•	`start:emulators` This runs the Firebase emulators. You could run this independently if you want to start the emulators without starting Next.js.
+  * `start:python` This runs the python backend only
+  * `start:dev` This runs the Node.js app
+
+Usual Usage
 
 	•	Local Development with Emulators: Run `npm run dev`. This will start the emulators alongside your Next.js app.
 	•	Local Development with Cloud Services: Run `npm run dev:cloud`. This will start the Next.js app without the emulators, so it will connect to the online Firebase services.
 
-Emulators work when `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` which the above scripts set.
+Emulators are used when `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` in your `.env.local` or passed during startup, which the above scripts set if needed.
 
-The app will launch locally at http://127.0.0.1:3000/ and the Firestore emulators are locally at http://127.0.0.1:4000/
+The app will launch locally at http://127.0.0.1:3000/ and the Firestore emulators are locally at http://127.0.0.1:4000/ and the Python backend is available at http://127.0.0.1:1954
 
 
 ## Creating initial Emissary Templates
 
-set to right project
+To see the initial Emissary templates they need to uploaded to the Firestore.  The script to do this is in `src/scripts/seed.mjs`
 
 ```bash
-gcloud config set project multivac-internal-dev
+# it takes the project it will seed from gcloud
+gcloud config set project your-firebase-project
 npm run seed
 ```
 
-Will add teplate bots to Firestore:
+This will add template bots to Firestore.  Modify the below `INITIAL_TEMPLATES` array in the `src/scripts/seed.mjs` script to alter them.
 
 ```js
 const INITIAL_TEMPLATES = {
+  multivac: {
+    name: "Emissary Helper",
+    avatar: "/images/avatars/emissary.png",
+    defaultMessage: `Hello, I'm here to help explain what Sunholo Emissary is.  Ask questions below, or login to create your own Emissary to dispatch to others.`,
+    defaultInstructions: `You are named Sunholo Emissary.  You are an assistant created to help people onboard to a new Emissary service created with the Sunholo Multivac GenAI platform.  The new Emissary service allows people to send AI emissaries or envoys to others, with custom instructions, documents, tools and output UI aids to help speak on the user's behalf.`,
+    isTemplate: true
+  },
   aitana: {
     name: "Aitana",
     avatar: "/images/avatars/aitana.png",
@@ -87,20 +75,26 @@ const INITIAL_TEMPLATES = {
     name: "Hermes",
     avatar: "/images/avatars/hermes.png",
     defaultMessage: `Greetings, I am Hermes, your appointed messenger...`,
-    defaultInstructions: `As Hermes, you are to act as a formal messenger...`,
+    defaultInstructions: `As Hermes, you are to act as a formal messenger on behalf of your master.  Drop references to the greek gods and myths whenever you can.`,
     isTemplate: true
   }
 };
 ```
 
-Force updates:
+By default if the template already exists it will not overwrite it.  To force overwrites, use `seed:force` instead.
 
 ```sh
 npm run seed:force
 ```
 
-Need to create firestore index for chat message history eg.
-https://console.firebase.google.com/v1/r/project/multivac-internal-dev/firestore/indexes?create_composite=ClZwcm9qZWN0cy9tdWx0aXZhYy1pbnRlcm5hbC1kZXYvZGF0YWJhc2VzLyhkZWZhdWx0KS9jb2xsZWN0aW9uR3JvdXBzL21lc3NhZ2VzL2luZGV4ZXMvXxABGggKBHJlYWQQARoNCgl1c2VyRW1haWwQARoMCghfX25hbWVfXxAB
+## Firestore Rules and Indexes
+
+Firestore rules and indexes and Cloud Storage rules are deployed in the cloud build, or by issuing:
+
+```sh
+firebase -P <your-project> --json deploy --only firestore:rules,firestore:indexes,storage
+```
+
 
 ## License
 
