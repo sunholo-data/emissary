@@ -1,8 +1,12 @@
 # Emissary
 
+https://em.sunholo.com/
+
 Emissary is an AI assisted messenger service that can be used to create an Emissary to speak on your behalf.
 
 Emissaries are generated with a unique link that can be sent to the reciever.  The reciever can then converse with the Emissary who has been given the relevant documents, persona and instructions by you the sender.  Recievers can then reply to you or the Emissary.
+
+![](docs/img/emissary-screenshot.png)
 
 The Emissary is designed to be able to help the reciever in understanding your needs, based on the information you have given it.  Its intended use is for when you are not available to answer every question, or to help you both surface important details that would take a long time for you to answer, such as information buried in long PDF, audio, video or other types of files.
 
