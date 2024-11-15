@@ -69,7 +69,7 @@ Use python 3.10 via uv .venv
 ```
 cd backend
 uv venv --python 3.10
-source backend/.venv/bin/activate
+source .venv/bin/activate
 cd ..
 ```
 
@@ -89,7 +89,7 @@ uv run backend/app.py
 
 ### Install Firebase emulators
 
-This is quickest way to get running locally, but you wil later probabky want ot configure a Firebase cloud project as shown below.
+This is quickest way to get running locally, but you will later probably want to configure a Firebase cloud project as shown later below.
 
 Make sure you have firebase installed
 ```sh
@@ -180,7 +180,7 @@ This email when logged in will be the super-admin e.g. can use the welcome bot o
 
 ### Create a .env.local file
 
-Put the details it will generate in `.env.local` for local development and copy them up to the `FIREBASE_ENV` secret on Secret Manager to use in deployments.  It should look something like this (see also [`env.local.example`](env.local.example) - rename it to `.env.local` for use)
+Put the details in will generate in `.env.local` for local development and copy them up to the `FIREBASE_ENV` secret on Secret Manager to use in deployments.  It should look something like this (see also [`env.local.example`](env.local.example) - rename it to `.env.local` for use)
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXX
@@ -228,19 +228,6 @@ Firestore rules and indexes and Cloud Storage rules are deployed in the cloud bu
 ```sh
 firebase -P <your-project> --json deploy --only firestore:rules,firestore:indexes,storage
 ```
-
-### Firebase emulators
-
-See more https://firebase.google.com/docs/web/setup
-
-```sh
-npm install firebase-admin --save
-firebase init
-# Select Storage and Firestore - DO NOT overwrite existing firestore.rules, firestore.indexes.json or storage.rules
-```
-
-You need Firestore and Storage emulators, which will also enable Firebase Auth emulator.
-
 
 
 ## Creating initial Emissary Templates
@@ -307,6 +294,8 @@ By default it uses the project specified in .env.local `NEXT_PUBLIC_FIREBASE_PRO
 ```sh
 node src/scripts/seed.mjs --project-id=your-project-id --force
 ```
+
+Users will be able to create Emissary bots based on the templates or their own custom emissaries.
 
 ## License
 
