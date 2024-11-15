@@ -66,6 +66,7 @@ steps:
       ENV _CONFIG_FOLDER=/gcs_config
       ENV VAC_CONFIG_FOLDER=/gcs_config/config
       ENV GOOGLE_CLOUD_LOGGING=1
+      ENV FIREBASE_BUCKET=multivac-internal-${BRANCH_NAME}.firebasestorage.app
 
       CMD exec gunicorn --bind :1956 --workers 4 --timeout 0 app:app
       EOF

@@ -2,13 +2,15 @@ from my_log import log, langfuse
 from sunholo.utils import ConfigManager
 from sunholo.invoke import AsyncTaskRunner
 import asyncio
+import os
 
 from sunholo.genai import init_genai, genai_safety, construct_file_content
 import google.generativeai as genai
 
 # Helper async function to fetch document content
 async def fetch_document_content(documents):
-    return await construct_file_content(documents, bucket="multivac-internal-dev.firebasestorage.app")
+    FIREBASE_BUCKET = os.environ.get('FIREBASE_BUCKET', 'multivac-internal-dev.firebasestorage.app') 
+    return await construct_file_content(documents, bucket=FIREBASE_BUCKET)
 
 def format_human_chat_history(chat_history):
     formatted_history = []
