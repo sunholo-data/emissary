@@ -1,8 +1,12 @@
 # Emissary
 
+https://em.sunholo.com/
+
 Emissary is an AI assisted messenger service that can be used to create an Emissary to speak on your behalf.
 
 Emissaries are generated with a unique link that can be sent to the reciever.  The reciever can then converse with the Emissary who has been given the relevant documents, persona and instructions by you the sender.  Recievers can then reply to you or the Emissary.
+
+![](docs/img/emissary-screenshot.png)
 
 The Emissary is designed to be able to help the reciever in understanding your needs, based on the information you have given it.  Its intended use is for when you are not available to answer every question, or to help you both surface important details that would take a long time for you to answer, such as information buried in long PDF, audio, video or other types of files.
 
@@ -18,6 +22,90 @@ Under the hood, the Emissary is powered by Gemini 1.5 on the Sunholo Multivac pl
 
 
 ## Install
+
+
+### Node.js frontend
+
+TODO
+
+### Backend - python
+
+Install uv ( from https://github.com/astral-sh/uv )
+
+```sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv -V
+# uv 0.5.2 (195f4b634 2024-11-14)
+```
+
+Use python 3.10 via uv .venv
+
+```
+uv venv --python 3.10
+source backend/.venv/bin/activate
+```
+
+> If local development of sunholo-py is required (not usually)
+> 
+> ```
+> cd backend
+> uv pip install -e ../../sunholo-py
+> ```
+
+Should now be able to run the backend server on http://127.0.0.1:1956 via:
+
+```sh
+uv run app.py 
+```
+
+### [Optional] Langfuse
+
+[Langfuse](https://langfuse.com/) is a GenOps tracing, eval and prompt CMS that makes working with GenAI applications easier.
+
+If on Multivac you can use the Langfuse API keys issued for https://langfuse.sunholo.com/ or create your own instance either via self-hosting or using Langfuse's cloud.
+
+Once issued add the following to the backend's .env variables:
+
+```
+LANGFUSE_HOST=https://langfuse.sunholo.com (or your own host)
+LANGFUSE_SECRET_KEY=<<secret>>
+LANGFUSE_PUBLIC_KEY=<<public>>
+```
+> When deployed in Multivac these are populated ia Secret Manager during the cloud build.
+
+It is recommended to use Langfuse, since then you can update prompts without needing to redploy, and can analyse sessions and GenAI traces to optimise performance.
+
+
+## Development setup
+
+The below commands will enable the required services: 
+
+- Node.js frontend 
+- Python backend 
+- [optional] Firebase services locally via emulators
+- [optional] Your own Firestore project in the cloud.
+
+```sh
+npm run dev # or dev:cloud - see below
+```
+
+Use CTRL-C to close down the services
+
+*	`dev` This is the main development script. It starts the Firebase emulators, the python backend app and the Next.js app in parallel. This way, you’ll be using the emulators when running the dev command.
+*	`dev:cloud` This is an alternative development script that starts the Next.js dev server and python backend without the local Firebase emulators. This allows you to develop locally but use the Firebase cloud services.
+*	`start:emulators` This runs the Firebase emulators. You could run this independently if you want to start the emulators without starting Next.js.
+* `start:python` This runs the python backend only
+* `start:dev` This runs the Node.js app
+
+Usual Usage
+
+*	Local Development with Emulators: Run `npm run dev`. This will start the emulators alongside your Next.js app.
+*	Local Development with Cloud Services: Run `npm run dev:cloud`. This will start the Next.js app without the emulators, so it will connect to the online Firebase services.
+
+Emulators are used when `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` in your `.env.local` or passed during startup, which the above scripts set if needed.
+
+The app will launch locally at http://127.0.0.1:3000/ and the Firestore emulators are locally at http://127.0.0.1:4000/ and the Python backend is available at http://127.0.0.1:1954
+
 
 ## Firebase setup
 
@@ -40,7 +128,7 @@ Put the details it will generate in `.env.local` for local development and copy 
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXX
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com (or hi.yourcustomdomain.com)
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123123123123
@@ -58,6 +146,17 @@ You should see this once done
 
 ![](docs/img/firebase-auth-setup.png)
 
+You will need to update the listed of the authorized domains with your URL once deployed online, e.g. em.sunholo.com
+
+And add your domain to the frame-src allowed list in [`next_config.mjs`](next_config.mjs)
+
+```js
+...
+// add your auth domain 
+"frame-src 'self' https://*.firebaseapp.com https://*.firebase.com https://*.googleapis.com https://*.sunholo.com",  
+...
+```
+
 ### Firestore
 
 Activate the Firestore service.  You can start it in dev or prod mode.
@@ -74,26 +173,18 @@ Firestore rules and indexes and Cloud Storage rules are deployed in the cloud bu
 firebase -P <your-project> --json deploy --only firestore:rules,firestore:indexes,storage
 ```
 
-## Development setup
+### Firebase emulators
+
+See more https://firebase.google.com/docs/web/setup
 
 ```sh
-npm run dev # or dev:cloud - see below
+npm install firebase-admin --save
+firebase init
+# Select Storage and Firestore - DO NOT overwrite existing firestore.rules, firestore.indexes.json or storage.rules
 ```
 
-*	`dev` This is the main development script. It starts the Firebase emulators, the python backend app and the Next.js app in parallel. This way, you’ll be using the emulators when running the dev command.
-*	`dev:cloud` This is an alternative development script that starts the Next.js dev server and python backend without the local Firebase emulators. This allows you to develop locally but use the Firebase cloud services.
-*	`start:emulators` This runs the Firebase emulators. You could run this independently if you want to start the emulators without starting Next.js.
-* `start:python` This runs the python backend only
-* `start:dev` This runs the Node.js app
+You need Firestore and Storage emulators, which will also enable Firebase Auth emulator.
 
-Usual Usage
-
-*	Local Development with Emulators: Run `npm run dev`. This will start the emulators alongside your Next.js app.
-*	Local Development with Cloud Services: Run `npm run dev:cloud`. This will start the Next.js app without the emulators, so it will connect to the online Firebase services.
-
-Emulators are used when `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` in your `.env.local` or passed during startup, which the above scripts set if needed.
-
-The app will launch locally at http://127.0.0.1:3000/ and the Firestore emulators are locally at http://127.0.0.1:4000/ and the Python backend is available at http://127.0.0.1:1954
 
 
 ## Creating initial Emissary Templates
@@ -157,6 +248,11 @@ By default if the template already exists it will not overwrite it.  To force ov
 npm run seed:force
 ```
 
+By default it uses the project specified in .env.local `NEXT_PUBLIC_FIREBASE_PROJECT_ID` but you can override that with:
+
+```sh
+node src/scripts/seed.mjs --project-id=your-project-id --force
+```
 
 ## License
 

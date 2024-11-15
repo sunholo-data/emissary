@@ -72,7 +72,7 @@ async function checkAndStart() {
     console.log('Python backend already running on port 1956.');
   } else {
     console.log('Starting Python backend...');
-    startService('python', ['backend/app.py'], 'Python');
+    startService('uv', ['run','backend/app.py'], 'Python');
   }
 }
 

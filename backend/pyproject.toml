@@ -1,0 +1,9 @@
+[project]
+name = "emissary_backend"
+version = "0.1.0"
+description = "Backend for the Emissary"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "sunholo[gcp,http]>=0.110.2",
+]

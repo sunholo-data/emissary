@@ -1,4 +1,3 @@
-// src/scripts/seed.mjs
 import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { fileURLToPath } from 'url';
@@ -9,10 +8,23 @@ import yaml from 'js-yaml';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const force = args.includes('--force');
+const projectIdArg = args.find(arg => arg.startsWith('--project-id='));
+const projectId = projectIdArg 
+  ? projectIdArg.split('=')[1]
+  : process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+if (!projectId) {
+  console.error('Error: Project ID must be specified via --project-id=YOUR_PROJECT_ID or NEXT_PUBLIC_FIREBASE_PROJECT_ID environment variable');
+  process.exit(1);
+}
+
 // Initialize Firebase Admin
 initializeApp({
   credential: applicationDefault(),
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  projectId
 });
 
 const db = getFirestore();
@@ -37,6 +49,7 @@ async function checkExistingTemplates() {
 }
 
 async function seedBots(force = false) {
+  console.log(`Using project ID: ${projectId}`);
   console.log('Loading templates from YAML...');
   const templates = await loadTemplates();
   
@@ -95,9 +108,6 @@ async function seedBots(force = false) {
     throw error;
   }
 }
-
-// Check if --force flag is provided
-const force = process.argv.includes('--force');
 
 // Run the seeding
 seedBots(force)
