@@ -58,17 +58,23 @@ Should now be able to run the backend server on http://127.0.0.1:1956 via:
 uv run app.py 
 ```
 
-### Firebase emulators
+### [Optional] Langfuse
 
-See more https://firebase.google.com/docs/web/setup
+[Langfuse](https://langfuse.com/) is a GenOps tracing, eval and prompt CMS that makes working with GenAI applications easier.
 
-```sh
-npm install firebase-admin --save
-firebase init
-# Select Storage and Firestore - DO NOT overwrite existing firestore.rules, firestore.indexes.json or storage.rules
+If on Multivac you can use the Langfuse API keys issued for https://langfuse.sunholo.com/ or create your own instance either via self-hosting or using Langfuse's cloud.
+
+Once issued add the following to the backend's .env variables:
+
 ```
+LANGFUSE_HOST=https://langfuse.sunholo.com (or your own host)
+LANGFUSE_SECRET_KEY=<<secret>>
+LANGFUSE_PUBLIC_KEY=<<public>>
+```
+> When deployed in Multivac these are populated ia Secret Manager during the cloud build.
 
-You need Firestore and Storage emulators, which will also enable Firebase Auth emulator.
+It is recommended to use Langfuse, since then you can update prompts without needing to redploy, and can analyse sessions and GenAI traces to optimise performance.
+
 
 ## Development setup
 
@@ -122,7 +128,7 @@ Put the details it will generate in `.env.local` for local development and copy 
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXX
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com (or hi.yourcustomdomain.com)
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123123123123
@@ -140,6 +146,17 @@ You should see this once done
 
 ![](docs/img/firebase-auth-setup.png)
 
+You will need to update the listed of the authorized domains with your URL once deployed online, e.g. em.sunholo.com
+
+And add your domain to the frame-src allowed list in [`next_config.mjs`](next_config.mjs)
+
+```js
+...
+// add your auth domain 
+"frame-src 'self' https://*.firebaseapp.com https://*.firebase.com https://*.googleapis.com https://*.sunholo.com",  
+...
+```
+
 ### Firestore
 
 Activate the Firestore service.  You can start it in dev or prod mode.
@@ -155,6 +172,18 @@ Firestore rules and indexes and Cloud Storage rules are deployed in the cloud bu
 ```sh
 firebase -P <your-project> --json deploy --only firestore:rules,firestore:indexes,storage
 ```
+
+### Firebase emulators
+
+See more https://firebase.google.com/docs/web/setup
+
+```sh
+npm install firebase-admin --save
+firebase init
+# Select Storage and Firestore - DO NOT overwrite existing firestore.rules, firestore.indexes.json or storage.rules
+```
+
+You need Firestore and Storage emulators, which will also enable Firebase Auth emulator.
 
 
 
