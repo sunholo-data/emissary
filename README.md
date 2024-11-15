@@ -23,6 +23,84 @@ Under the hood, the Emissary is powered by Gemini 1.5 on the Sunholo Multivac pl
 
 ## Install
 
+
+### Node.js frontend
+
+TODO
+
+### Backend - python
+
+Install uv ( from https://github.com/astral-sh/uv )
+
+```sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv -V
+# uv 0.5.2 (195f4b634 2024-11-14)
+```
+
+Use python 3.10 via uv .venv
+
+```
+uv venv --python 3.10
+source backend/.venv/bin/activate
+```
+
+> If local development of sunholo-py is required (not usually)
+> 
+> ```
+> cd backend
+> uv pip install -e ../../sunholo-py
+> ```
+
+Should now be able to run the backend server on http://127.0.0.1:1956 via:
+
+```sh
+uv run app.py 
+```
+
+### Firebase emulators
+
+See more https://firebase.google.com/docs/web/setup
+
+```sh
+npm install firebase-admin --save
+firebase init
+# Select Storage and Firestore - DO NOT overwrite existing firestore.rules, firestore.indexes.json or storage.rules
+```
+
+You need Firestore and Storage emulators, which will also enable Firebase Auth emulator.
+
+## Development setup
+
+The below commands will enable the required services: 
+
+- Node.js frontend 
+- Python backend 
+- [optional] Firebase services locally via emulators
+- [optional] Your own Firestore project in the cloud.
+
+```sh
+npm run dev # or dev:cloud - see below
+```
+
+Use CTRL-C to close down the services
+
+*	`dev` This is the main development script. It starts the Firebase emulators, the python backend app and the Next.js app in parallel. This way, you’ll be using the emulators when running the dev command.
+*	`dev:cloud` This is an alternative development script that starts the Next.js dev server and python backend without the local Firebase emulators. This allows you to develop locally but use the Firebase cloud services.
+*	`start:emulators` This runs the Firebase emulators. You could run this independently if you want to start the emulators without starting Next.js.
+* `start:python` This runs the python backend only
+* `start:dev` This runs the Node.js app
+
+Usual Usage
+
+*	Local Development with Emulators: Run `npm run dev`. This will start the emulators alongside your Next.js app.
+*	Local Development with Cloud Services: Run `npm run dev:cloud`. This will start the Next.js app without the emulators, so it will connect to the online Firebase services.
+
+Emulators are used when `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` in your `.env.local` or passed during startup, which the above scripts set if needed.
+
+The app will launch locally at http://127.0.0.1:3000/ and the Firestore emulators are locally at http://127.0.0.1:4000/ and the Python backend is available at http://127.0.0.1:1954
+
+
 ## Firebase setup
 
 You can choose to use firebase emulation locally or setup your own cloud firebase at https://console.firebase.google.com
@@ -78,26 +156,6 @@ Firestore rules and indexes and Cloud Storage rules are deployed in the cloud bu
 firebase -P <your-project> --json deploy --only firestore:rules,firestore:indexes,storage
 ```
 
-## Development setup
-
-```sh
-npm run dev # or dev:cloud - see below
-```
-
-*	`dev` This is the main development script. It starts the Firebase emulators, the python backend app and the Next.js app in parallel. This way, you’ll be using the emulators when running the dev command.
-*	`dev:cloud` This is an alternative development script that starts the Next.js dev server and python backend without the local Firebase emulators. This allows you to develop locally but use the Firebase cloud services.
-*	`start:emulators` This runs the Firebase emulators. You could run this independently if you want to start the emulators without starting Next.js.
-* `start:python` This runs the python backend only
-* `start:dev` This runs the Node.js app
-
-Usual Usage
-
-*	Local Development with Emulators: Run `npm run dev`. This will start the emulators alongside your Next.js app.
-*	Local Development with Cloud Services: Run `npm run dev:cloud`. This will start the Next.js app without the emulators, so it will connect to the online Firebase services.
-
-Emulators are used when `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` in your `.env.local` or passed during startup, which the above scripts set if needed.
-
-The app will launch locally at http://127.0.0.1:3000/ and the Firestore emulators are locally at http://127.0.0.1:4000/ and the Python backend is available at http://127.0.0.1:1954
 
 
 ## Creating initial Emissary Templates
