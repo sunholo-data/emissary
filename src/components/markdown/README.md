@@ -1,5 +1,13 @@
 # Custom Markdown Component Requirements
 
+The components in this folder can be used by Emissary bots in their replies.
+
+## Prompt to create a new component
+
+A prompt is given below to help a GenAI bot create a suitable component that will integrate with the existing React code.
+
+--
+
 Please create a React component and its corresponding bot instruction template that meets these specifications:
 
 ## Bot Instruction Template
@@ -157,8 +165,9 @@ Required details:
    - Any limitations or gotchas to mention
 
 
-
 ## Instructions for bots
+
+For existing components, a sample of the prompts used to encourage their correct usage is below:
 
 ### Tooltips
 
@@ -166,14 +175,12 @@ To add tooltips to your content, use the tooltip component. Here are some exampl
 
 1. Basic tooltip (appears above content):
 ```markdown
-Hover over me
+<tooltip text="hi">Hover over me</tooltip>
 ```
 
 2. Position the tooltip:
 ```markdown
-External Link
-Learn more
-Back
+<tooltip text="Learn more" position="bottom">External Link</tooltip>
 ```
 
 The tooltip component supports these positions:
@@ -201,7 +208,7 @@ The Preview component lets you display various file types including images, vide
 Basic Usage
 The preview component requires two main props:
 
-uri: The Google Storage path (gs://) to your file
+uri: The Google Storage path (https://) to your file
 type: The MIME type of the file
 name: (Optional) A display name for the file
 
@@ -209,24 +216,25 @@ Examples By File Type
 
 Images (jpg, png, webp):
 
-Copy<preview uri="gs://bucket/image.jpg" type="image/jpeg" name="Profile Photo" />
-<preview uri="gs://bucket/icon.png" type="image/png" name="App Icon" />
-<preview uri="gs://bucket/photo.webp" type="image/webp" name="Product Image" />
+<preview uri="https://bucket/image.jpg" type="image/jpeg" name="Profile Photo" />
+<preview uri="https://bucket/icon.png" type="image/png" name="App Icon" />
+<preview uri="https://bucket/photo.webp" type="image/webp" name="Product Image" />
 
 Audio Files (mp3, wav):
 
-Copy<preview uri="gs://bucket/song.mp3" type="audio/mp3" name="Background Music" />
-<preview uri="gs://bucket/sound.wav" type="audio/wav" name="Sound Effect" />
+<preview uri="https://bucket/song.mp3" type="audio/mp3" name="Background Music" />
+<preview uri="https://bucket/sound.wav" type="audio/wav" name="Sound Effect" />
 
 Video Files (mp4, webm):
 
-Copy<preview uri="gs://bucket/demo.mp4" type="video/mp4" name="Product Demo" />
-<preview uri="gs://bucket/clip.webm" type="video/webm" name="Tutorial Video" />
+<preview uri="https://bucket/demo.mp4" type="video/mp4" name="Product Demo" />
+<preview uri="https://bucket/clip.webm" type="video/webm" name="Tutorial Video" />
 
 PDF Documents:
 
-Copy<preview uri="gs://bucket/doc.pdf" type="application/pdf" name="User Manual" />
-Supported File Types
+<preview uri="https://bucket/doc.pdf" type="application/pdf" name="User Manual" />
+
+Supported File Types:
 
 Images: jpeg, png, webp, heic, heif
 Audio: mp3, wav, aiff, aac, ogg, flac
@@ -252,17 +260,17 @@ Common Use Cases
 
 Product Images:
 
-Copy<preview uri="gs://bucket/product-front.webp" type="image/webp" name="Front View" />
+<preview uri="gs://bucket/product-front.webp" type="image/webp" name="Front View" />
 <preview uri="gs://bucket/product-side.webp" type="image/webp" name="Side View" />
 
 Learning Materials:
 
-Copy<preview uri="gs://bucket/manual.pdf" type="application/pdf" name="Installation Guide" />
+<preview uri="gs://bucket/manual.pdf" type="application/pdf" name="Installation Guide" />
 <preview uri="gs://bucket/lesson1.mp4" type="video/mp4" name="Getting Started" />
 
 Code Examples:
 
-Copy<preview uri="gs://bucket/sample.py" type="text/x-python" name="Python Example" />
+<preview uri="gs://bucket/sample.py" type="text/x-python" name="Python Example" />
 <preview uri="gs://bucket/styles.css" type="text/css" name="CSS Styles" />
 Troubleshooting
 If you see a generic file icon instead of a preview:
