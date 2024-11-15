@@ -128,7 +128,7 @@ Put the details it will generate in `.env.local` for local development and copy 
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXX
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com (or hi.yourcustomdomain.com)
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com 
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123123123123
@@ -192,8 +192,6 @@ You need Firestore and Storage emulators, which will also enable Firebase Auth e
 To seed the initial Emissary templates they need to be added to Firestore.  The script to do this is in [`src/scripts/seed.mjs`](src/scripts/seed.mjs).
 
 ```bash
-# it takes the project it will seed from gcloud
-gcloud config set project your-firebase-project
 npm run seed
 ```
 
