@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const FETCH_TIMEOUT = 60000; // 60 seconds
+const FETCH_TIMEOUT = 1200000; // 120 seconds
 const MAX_RETRIES = 3;
 const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:1956'; // Use IPv4 explicitly
 
