@@ -13,6 +13,8 @@ import {
 import type { FileIconType } from '@/lib/icons';
 import type { BaseCustomProps } from './types';
 
+
+
 interface PreviewItem {
   uri: string;
   type: string;
@@ -28,6 +30,24 @@ interface PreviewProps extends BaseCustomProps {
 
 interface PreviewContentProps extends PreviewItem {
   className?: string;
+}
+
+const ALLOWED_IMAGE_DOMAINS = [
+  'localhost',
+  'sunholo.com',
+  'googleapis.com',
+  'firebasestorage.googleapis.com'
+  // Add other allowed domains here
+];
+
+// Helper function to check if an image URL is from an allowed domain
+const isAllowedImageDomain = (url: string): boolean => {
+  try {
+    const hostname = new URL(url).hostname;
+    return ALLOWED_IMAGE_DOMAINS.includes(hostname);
+  } catch (e) {
+    return false;
+  }
 }
 
 const PreviewContent = memo(({ uri, type, name, className }: PreviewContentProps) => {
@@ -50,6 +70,29 @@ const PreviewContent = memo(({ uri, type, name, className }: PreviewContentProps
     // Helper function to render content based on type
     const renderContent = () => {
       if (type.startsWith('image/')) {
+        const isAllowedDomain = isAllowedImageDomain(uri);
+
+        if (!isAllowedDomain) {
+          let hostname = '';
+          try {
+            hostname = new URL(uri).hostname;
+          } catch (e) {
+            hostname = 'Invalid URL';
+          }
+
+          return (
+            <div className={fallbackClasses}>
+              <ImageIcon className="w-12 h-12 mb-2" />
+              <span className="text-center">Image preview unavailable - unauthorized domain</span>
+              <div className="mt-2 text-sm text-gray-400 max-w-md">
+                <p className="break-all">Image URL: {uri}</p>
+                <p className="mt-1">Domain &quot;{hostname}&quot; is not in the allowed list</p>
+                <p className="mt-2">Contact administrator to allow this domain</p>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div className="relative w-full h-[800px]">
             <Image
