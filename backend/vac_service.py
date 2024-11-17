@@ -82,8 +82,10 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     total_tokens = tokens.total_tokens
     if total_tokens is None:
         chunks = "Could not calculate total tokens so aborting request."
+        callback.on_llm_new_token(token=chunks)
     if total_tokens > FREE_TOKEN_LIMIT:
         chunks = f"Total tokens is > {FREE_TOKEN_LIMIT} which is not permitted for free plans"
+        callback.on_llm_new_token(token=chunks)
 
     usage = {
         "input":0,
