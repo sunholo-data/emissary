@@ -30,6 +30,9 @@ git clone https://github.com/sunholo-data/emissary.git
 cd emissary
 ```
 
+- The default `dev` branch is experimental.
+- The `test` branch is testing before deployment to `prod`
+- The `prod` branch is what is running on https://em.sunholo.com 
 
 ### Node.js frontend
 
@@ -296,6 +299,20 @@ node src/scripts/seed.mjs --project-id=your-project-id --force
 ```
 
 Users will be able to create Emissary bots based on the templates or their own custom emissaries.
+
+## Deployment
+
+This repo uses the [`cloudbuild.yaml`](cloudbuild.yaml) script to deploy to the Multivac Cloud running on Google Cloud Platform via its Cloud Build deploying to Cloud Run.
+
+To support deployment the Artifact Registry and Secret Manager services provide docker image hosting and secrets.
+
+The Cloud Build needs/creates these images:
+- `firebase` to run the firebase commands
+- `ui` - The React app as built via the [`Dockerfile`](Dockerfile)
+- `backend` - the Python app using `sunholo-py` to run the GenAI calls.
+
+The `ui` and `backend` images are deployed to one Cloud Run instance using its multi-container feature - `ui` listens publically on port `8080` and sends backend API requests internally to the backend at `localhost:1954`.
+
 
 ## License
 
