@@ -23,10 +23,36 @@ Under the hood, the Emissary is powered by Gemini 1.5 on the Sunholo Multivac pl
 
 ## Install
 
+Clone this repository:
+
+```sh
+git clone https://github.com/sunholo-data/emissary.git
+cd emissary
+```
+
 
 ### Node.js frontend
 
-TODO
+Check you have node.js installed
+
+```sh
+node -v
+#v19.9.0
+npm -v
+9.6.3
+```
+
+If not install it from https://nodejs.org/
+
+Install the dependencies:
+
+```sh
+npm install
+```
+
+This will create a `node_modules` directory containing all the dependencies required for the app.
+
+Run via `npm run dev` after you have installed the backend below.  The frontend will be available on http://localhost:3000
 
 ### Backend - python
 
@@ -41,8 +67,10 @@ uv -V
 Use python 3.10 via uv .venv
 
 ```
+cd backend
 uv venv --python 3.10
-source backend/.venv/bin/activate
+source .venv/bin/activate
+cd ..
 ```
 
 > If local development of sunholo-py is required (not usually)
@@ -55,8 +83,36 @@ source backend/.venv/bin/activate
 Should now be able to run the backend server on http://127.0.0.1:1956 via:
 
 ```sh
-uv run app.py 
+# assuming in root
+uv run backend/app.py 
 ```
+
+### Install Firebase emulators
+
+This is quickest way to get running locally, but you will later probably want to configure a Firebase cloud project as shown later below.
+
+Make sure you have firebase installed
+```sh
+firebase --version
+# 13.24.2
+```
+
+Otherwise install via:
+
+```sh
+npm install -g firebase-tools
+```
+
+Configure emulators:
+
+```sh
+firebase init
+# Pick firestore, storage and auth should come with that as well
+```
+
+The firebase emulator configuration is already available within [`firebase.json`](firebase.json) so use that if you can.
+
+You can check its all running via `firebase emulators:start` which should start the emulator UI on http://localhost:4000
 
 ### [Optional] Langfuse
 
@@ -78,11 +134,11 @@ It is recommended to use Langfuse, since then you can update prompts without nee
 
 ## Development setup
 
-The below commands will enable the required services: 
+The below commands will enable the required services, assuming they are installed as above.
 
 - Node.js frontend 
 - Python backend 
-- [optional] Firebase services locally via emulators
+- Firebase services locally via emulators
 - [optional] Your own Firestore project in the cloud.
 
 ```sh
@@ -97,7 +153,7 @@ Use CTRL-C to close down the services
 * `start:python` This runs the python backend only
 * `start:dev` This runs the Node.js app
 
-Usual Usage
+### Day to day usage:
 
 *	Local Development with Emulators: Run `npm run dev`. This will start the emulators alongside your Next.js app.
 *	Local Development with Cloud Services: Run `npm run dev:cloud`. This will start the Next.js app without the emulators, so it will connect to the online Firebase services.
@@ -107,7 +163,7 @@ Emulators are used when `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` in your `.env.
 The app will launch locally at http://127.0.0.1:3000/ and the Firestore emulators are locally at http://127.0.0.1:4000/ and the Python backend is available at http://127.0.0.1:1954
 
 
-## Firebase setup
+## Firebase Cloud setup [optional]
 
 You can choose to use firebase emulation locally or setup your own cloud firebase at https://console.firebase.google.com
 
@@ -124,7 +180,7 @@ This email when logged in will be the super-admin e.g. can use the welcome bot o
 
 ### Create a .env.local file
 
-Put the details it will generate in `.env.local` for local development and copy them up to the `FIREBASE_ENV` secret on Secret Manager to use in deployments.  It should look something like this (see also [`env.local.example`](env.local.example) - rename it to `.env.local` for use)
+Put the details in will generate in `.env.local` for local development and copy them up to the `FIREBASE_ENV` secret on Secret Manager to use in deployments.  It should look something like this (see also [`env.local.example`](env.local.example) - rename it to `.env.local` for use)
 
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXX
@@ -172,19 +228,6 @@ Firestore rules and indexes and Cloud Storage rules are deployed in the cloud bu
 ```sh
 firebase -P <your-project> --json deploy --only firestore:rules,firestore:indexes,storage
 ```
-
-### Firebase emulators
-
-See more https://firebase.google.com/docs/web/setup
-
-```sh
-npm install firebase-admin --save
-firebase init
-# Select Storage and Firestore - DO NOT overwrite existing firestore.rules, firestore.indexes.json or storage.rules
-```
-
-You need Firestore and Storage emulators, which will also enable Firebase Auth emulator.
-
 
 
 ## Creating initial Emissary Templates
@@ -251,6 +294,8 @@ By default it uses the project specified in .env.local `NEXT_PUBLIC_FIREBASE_PRO
 ```sh
 node src/scripts/seed.mjs --project-id=your-project-id --force
 ```
+
+Users will be able to create Emissary bots based on the templates or their own custom emissaries.
 
 ## License
 
