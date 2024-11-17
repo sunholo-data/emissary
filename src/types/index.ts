@@ -53,6 +53,11 @@ export type ChatInterfaceProps = {
     userMessage: string | null;
     instructions?: string;
     documents?: Document[];
+    voiceConfig?: {
+      languageCode: string;
+      name: string;
+      ssmlGender: 'MALE' | 'FEMALE' | 'NEUTRAL';
+    };
   };
 
 export type DocumentSidebarProps = {

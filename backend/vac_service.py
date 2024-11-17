@@ -1,11 +1,14 @@
 from my_log import log, langfuse
 from sunholo.utils import ConfigManager
-from sunholo.invoke import AsyncTaskRunner
+#from sunholo.invoke import AsyncTaskRunner
 import asyncio
 import os
 
 from sunholo.genai import init_genai, genai_safety, construct_file_content
 import google.generativeai as genai
+from google.generativeai.types import GenerateContentResponse
+
+FREE_TOKEN_LIMIT = 128000
 
 # Helper async function to fetch document content
 async def fetch_document_content(documents):
@@ -73,20 +76,35 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
         model=model_name,
         input=contents,
     )
-    response = model.generate_content(contents, stream=True)
-    chunks=""
-    for chunk in response:
-        if chunk:
-            try:
-                callback.on_llm_new_token(token=chunk.text)
-                chunks += chunk.text
-            except ValueError as err:
-                log.error(f"Error generating chunk: {str(err)}")
     
-    # stream has finished, full response is also returned
-    callback.on_llm_end(response=response)
-    log.info(f"model.response: {response}")
-    gen.end(output=chunks)
+    chunks=""
+    tokens = model.count_tokens(contents)
+    total_tokens = tokens.total_tokens
+    if total_tokens is None:
+        chunks = "Could not calculate total tokens so aborting request."
+    if total_tokens > FREE_TOKEN_LIMIT:
+        chunks = f"Total tokens is > {FREE_TOKEN_LIMIT} which is not permitted for free plans"
+
+    usage = {}
+    usage_metadata = {}
+    if not chunks:
+      response: GenerateContentResponse = model.generate_content(contents, stream=True)
+      usage = {"input": total_tokens, "unit":"TOKENS"}
+      for chunk in response:
+          if chunk:
+              try:
+                  callback.on_llm_new_token(token=chunk.text)
+                  chunks += chunk.text
+              except ValueError as err:
+                  log.error(f"Error generating chunk: {str(err)}")
+      
+      # stream has finished, full response is also returned
+      callback.on_llm_end(response=response)
+      usage_metadata = response.usage_metadata
+      usage["output"] = usage_metadata.candidates_token_count
+      log.info(f"model.response: {response} {usage_metadata=}")
+
+    gen.end(output=chunks, usage=usage)
 
     metadata = {
         "question": question,
