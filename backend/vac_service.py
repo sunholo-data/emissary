@@ -85,11 +85,15 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     if total_tokens > FREE_TOKEN_LIMIT:
         chunks = f"Total tokens is > {FREE_TOKEN_LIMIT} which is not permitted for free plans"
 
-    usage = {}
+    usage = {
+        "input":0,
+        "output":0,
+        "total":0,
+        "unit": "TOKENS"
+    }
     usage_metadata = {}
     if not chunks:
       response: GenerateContentResponse = model.generate_content(contents, stream=True)
-      usage = {"input": total_tokens, "unit":"TOKENS"}
       for chunk in response:
           if chunk:
               try:
@@ -101,7 +105,9 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
       # stream has finished, full response is also returned
       callback.on_llm_end(response=response)
       usage_metadata = response.usage_metadata
+      usage["input"] = usage_metadata.prompt_token_count
       usage["output"] = usage_metadata.candidates_token_count
+      usage["total"]  = usage_metadata.total_token_count
       log.info(f"model.response: {response} {usage_metadata=}")
 
     gen.end(output=chunks, usage=usage)
