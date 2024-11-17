@@ -75,6 +75,36 @@ export default function AdminPage() {
             if (!currentUser) return;
             try {
                 const bots = await FirebaseService.getUserBots(currentUser.uid);
+               // If user is admin, also fetch the welcome bot
+               if (currentUser.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+                console.log("User is admin loading welcome bot");
+                    try {
+                        const welcomeBot = await FirebaseService.getWelcomeBot();
+                        if (welcomeBot) {
+                            // Add welcome bot to the list if it's not already there
+                            const welcomeBotExists = bots.some(bot => bot.shareId === 'welcome-emissary');
+                            if (!welcomeBotExists) {
+                                bots.unshift({
+                                    ...welcomeBot,
+                                    shareId: 'welcome-emissary',
+                                    botId: 'welcome-emissary',
+                                    botName: 'Emisary Helper',
+                                    botAvatar: '/images/avatars/emissary.png',
+                                    recipientName: 'Everyone',
+                                    adminEmail: process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+                                    updatedAt: new Date(),
+                                    lastAccessedAt: new Date(),
+                                    shareUrl: `${window.location.origin}`,
+                                    createdAt: new Date(),
+                                    usageCount: 0,
+                                    initialDocuments: welcomeBot.initialDocuments || []
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error loading welcome bot:', error);
+                    }
+                }
                 setUserBots(bots);
             } catch (error) {
                 console.error('Error loading user bots:', error);
@@ -198,6 +228,14 @@ export default function AdminPage() {
             initialInstructions: config.initialInstructions,
             initialDocuments: config.initialDocuments || []
         };
+
+        if (editingBot === 'welcome-emissary') {
+          // Special handling for welcome bot
+          await FirebaseService.updateWelcomeBot(updateConfig);
+        } else {
+            // Normal bot update
+            await FirebaseService.updateShareConfig(currentUser.uid, editingBot, updateConfig);
+        }
 
         await FirebaseService.updateShareConfig(currentUser.uid, editingBot, updateConfig);
 
@@ -410,7 +448,7 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
   setIsUploading(true);
   try {
       const document = await DocumentHandler.handleFileUpload(event, {
-          userId: currentUser.uid,
+          userId: shareId === 'welcome-emissary' ? 'welcome-bot' : currentUser.uid,
           shareId,
           currentDocuments: config.initialDocuments || [],
       });
@@ -423,10 +461,19 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
           }));
 
           if (editingBot) {
-              await FirebaseService.updateShareConfig(currentUser.uid, editingBot, {
+            if (editingBot === 'welcome-emissary') {
+              await FirebaseService.updateWelcomeBot({
                   ...config,
                   initialDocuments: updatedDocuments
               });
+          } else {
+            await FirebaseService.updateShareConfig(currentUser.uid, editingBot, {
+              ...config,
+              initialDocuments: updatedDocuments
+          });
+
+          }
+
           }
       }
   } catch (error) {

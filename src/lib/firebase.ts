@@ -291,6 +291,23 @@ export function initFirebase() {
   }
 
   // Firestore Methods
+    static async getWelcomeBot() {
+      const docRef = doc(this.db, 'welcome-bot', 'welcome-emissary');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+          return docSnap.data();
+      }
+      return null;
+  }
+
+  static async updateWelcomeBot(config: any) {
+      const docRef = doc(this.db, 'welcome-bot', 'welcome-emissary');
+      await setDoc(docRef, {
+          ...config,
+          updatedAt: new Date().toISOString()
+      });
+  }
+
   static async getConfigForUser(userId: string, shareId: string): Promise<ConfigProps> {
     if (typeof window === 'undefined') throw new Error('This method can only be used in the browser');
     try {

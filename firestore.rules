@@ -56,6 +56,18 @@ service cloud.firestore {
              incomingData.botId is string;
     }
 
+    // Add welcome bot collection rules
+    match /welcome-bot/{documentId} {
+      allow read: if true;
+      allow write: if isWelcomeAdmin();
+      
+      // Allow nested collections if needed
+      match /{document=**} {
+        allow read: if true;
+        allow write: if isWelcomeAdmin();
+      }
+    }
+
     // User configs and shares
     match /userConfigs/{userId} {
       allow read: if isAuthenticated();
@@ -102,7 +114,7 @@ service cloud.firestore {
     // Welcome bot special case
     match /chatMessages/welcome-emissary {
       allow read: if true;
-      allow create: if isWelcomeAdmin();
+      allow create, update: if isWelcomeAdmin();
       
       match /messages/{messageId} {
         // Allow reading all messages
