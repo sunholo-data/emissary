@@ -1,12 +1,18 @@
 // src/app/api/proxy/route.ts
 import { NextResponse } from 'next/server';
 
-const FETCH_TIMEOUT = 1200000; // 120 seconds
-const MAX_RETRIES = 3;
 const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:1956';
+
+const MAX_RETRIES = 3;
 const HEALTH_CHECK_RETRIES = 3;  // Number of health check attempts during startup
 const HEALTH_CHECK_RETRY_DELAY = 5000;  // 5 seconds between retries
 
+const INITIAL_REQUEST_TIMEOUT = 20000;  // 20 seconds for first request
+const NORMAL_REQUEST_TIMEOUT = 120000;  // 120 seconds for subsequent requests
+const WARMUP_MARKER = { 
+    isFirstRequest: true,
+    timestamp: 0 
+};
 
 interface BackendResponse extends Omit<Response, 'body'> {
     body?: ReadableStream<any>;
@@ -57,10 +63,15 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const checkBackendHealth = async (requestId: string, allowRetries: boolean = true): Promise<boolean> => {
     const startTime = Date.now();
     const healthUrl = `${BACKEND_BASE_URL}/health`;
+    const isWarmupPhase = WARMUP_MARKER.isFirstRequest || 
+                         (Date.now() - WARMUP_MARKER.timestamp > 3600000); // Reset after 1 hour idle
 
     for (let attempt = 1; attempt <= (allowRetries ? HEALTH_CHECK_RETRIES : 1); attempt++) {
         try {
-            logWithTimestamp(requestId, `Health check attempt ${attempt}/${HEALTH_CHECK_RETRIES} for: ${healthUrl}`);
+            logWithTimestamp(requestId, `Health check attempt ${attempt}/${HEALTH_CHECK_RETRIES}`, {
+                url: healthUrl,
+                isWarmupPhase
+            });
             
             const response = await fetchWithTimeout(
                 healthUrl,
@@ -71,8 +82,9 @@ const checkBackendHealth = async (requestId: string, allowRetries: boolean = tru
                         'X-Request-ID': requestId
                     }
                 },
-                10000, // 10 second timeout for health checks
-                requestId
+                10000,
+                requestId,
+                isWarmupPhase
             );
 
             const duration = Date.now() - startTime;
@@ -83,28 +95,28 @@ const checkBackendHealth = async (requestId: string, allowRetries: boolean = tru
                 status: response.status,
                 healthy: isHealthy,
                 attempt,
-                duration: `${duration}ms`
+                duration: `${duration}ms`,
+                isWarmupPhase
             });
 
             if (isHealthy) return true;
             
             if (attempt < HEALTH_CHECK_RETRIES && allowRetries) {
-                logWithTimestamp(requestId, `Backend not ready, waiting ${HEALTH_CHECK_RETRY_DELAY}ms before retry`);
-                await delay(HEALTH_CHECK_RETRY_DELAY);
+                const retryDelay = isWarmupPhase ? 
+                    HEALTH_CHECK_RETRY_DELAY * 2 : // Double delay during warmup
+                    HEALTH_CHECK_RETRY_DELAY;
+                    
+                logWithTimestamp(requestId, `Backend not ready, waiting ${retryDelay}ms before retry`);
+                await delay(retryDelay);
             }
 
         } catch (error) {
-            const duration = Date.now() - startTime;
-            logWithTimestamp(requestId, `Health check attempt ${attempt} failed:`, {
-                url: healthUrl,
-                error: error instanceof Error ? error.message : 'Unknown error',
-                cause: (error as any)?.cause,
-                duration: `${duration}ms`
-            });
-
             if (attempt < HEALTH_CHECK_RETRIES && allowRetries) {
-                logWithTimestamp(requestId, `Retrying health check in ${HEALTH_CHECK_RETRY_DELAY}ms`);
-                await delay(HEALTH_CHECK_RETRY_DELAY);
+                const retryDelay = isWarmupPhase ? 
+                    HEALTH_CHECK_RETRY_DELAY * 2 : 
+                    HEALTH_CHECK_RETRY_DELAY;
+                logWithTimestamp(requestId, `Retrying health check in ${retryDelay}ms`);
+                await delay(retryDelay);
             }
         }
     }
@@ -150,16 +162,25 @@ const fetchWithTimeout = async (
     url: string,
     options: RequestInit,
     timeout: number,
-    requestId: string
+    requestId: string,
+    isWarmupPhase: boolean = false
 ): Promise<BackendResponse> => {
     const controller = new AbortController();
+    const timeoutMs = isWarmupPhase ? INITIAL_REQUEST_TIMEOUT : timeout;
+    
     const id = setTimeout(() => {
         controller.abort();
-        logWithTimestamp(requestId, `Request timed out after ${timeout}ms`);
-    }, timeout);
+        logWithTimestamp(requestId, `Request timed out after ${timeoutMs}ms`, {
+            isWarmupPhase,
+            url
+        });
+    }, timeoutMs);
 
     try {
-        logWithTimestamp(requestId, `Fetching ${options.method} ${url}`);
+        logWithTimestamp(requestId, `Fetching ${options.method} ${url}`, {
+            isWarmupPhase,
+            timeout: timeoutMs
+        });
         
         const response = await fetch(url, {
             ...options,
@@ -168,8 +189,18 @@ const fetchWithTimeout = async (
         
         clearTimeout(id);
         
-        // Create properly typed response
-        const typedResponse: BackendResponse = {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        // If this succeeds, we're warmed up
+        if (isWarmupPhase) {
+            WARMUP_MARKER.isFirstRequest = false;
+            WARMUP_MARKER.timestamp = Date.now();
+            logWithTimestamp(requestId, 'Backend warmup completed');
+        }
+
+        return {
             ...response,
             body: response.body || undefined,
             json: response.json.bind(response),
@@ -177,17 +208,20 @@ const fetchWithTimeout = async (
             status: response.status
         };
 
-        return typedResponse;
-
     } catch (error) {
         clearTimeout(id);
         if (error instanceof Error && error.name === 'AbortError') {
             logWithTimestamp(requestId, 'Request aborted due to timeout', {
                 url,
-                timeout
+                timeout: timeoutMs,
+                isWarmupPhase
             });
-            const timeoutError = new Error('Request timeout') as ProxyError;
-            timeoutError.status = 504;
+            const timeoutError = new Error(
+                isWarmupPhase ? 
+                'Backend still warming up, please retry' : 
+                'Request timeout'
+            ) as ProxyError;
+            timeoutError.status = isWarmupPhase ? 503 : 504;
             throw timeoutError;
         }
         return handleConnectionError(error, requestId);
@@ -197,8 +231,11 @@ const fetchWithTimeout = async (
 export async function POST(req: Request) {
     const requestId = req.headers.get('X-Request-ID') || 
                      Math.random().toString(36).substring(7);
+
+    const isWarmupPhase = WARMUP_MARKER.isFirstRequest || 
+                            (Date.now() - WARMUP_MARKER.timestamp > 3600000);
                      
-    logWithTimestamp(requestId, 'Proxy request received');
+    logWithTimestamp(requestId, 'Proxy request received', { isWarmupPhase });
 
     try {
         const { endpoint, method = 'POST', isStreaming, ...body } = await req.json();
@@ -216,7 +253,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ 
                 status: isHealthy ? 200 : 503,
                 ok: isHealthy,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                isWarmupPhase
             });
         }
 
@@ -225,36 +263,36 @@ export async function POST(req: Request) {
         // Check health before proceeding with main request - with retries during startup
         const isHealthy = await checkBackendHealth(requestId, true);
         if (!isHealthy) {
-            logWithTimestamp(requestId, 'Backend health check failed after retries');
             return NextResponse.json({
                 error: 'Backend service unavailable',
-                details: 'The backend server is not responding. Please ensure it is running.',
+                details: isWarmupPhase ? 
+                    'Backend is still warming up, please retry shortly' : 
+                    'Backend is not responding, please try again later',
                 retry: true,
-                retryAfter: 5  // Suggest client retry after 5 seconds
+                retryAfter: isWarmupPhase ? 3 : 5,
+                isWarmup: isWarmupPhase
             }, { 
                 status: 503,
                 headers: {
-                    'Retry-After': '5'
+                    'Retry-After': isWarmupPhase ? '3' : '5'
                 }
             });
         }
         
-        const response = await retryWithBackoff(
-            async () => fetchWithTimeout(
-                backendUrl,
-                {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Connection': 'keep-alive',
-                        'X-Request-ID': requestId
-                    },
-                    ...(method === 'POST' ? { body: JSON.stringify(body) } : {})
+        const response = await fetchWithTimeout(
+            backendUrl,
+            {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Connection': 'keep-alive',
+                    'X-Request-ID': requestId
                 },
-                FETCH_TIMEOUT,
-                requestId
-            ),
-            requestId
+                ...(method === 'POST' ? { body: JSON.stringify(body) } : {})
+            },
+            isWarmupPhase ? INITIAL_REQUEST_TIMEOUT : NORMAL_REQUEST_TIMEOUT,
+            requestId,
+            isWarmupPhase
         );
 
         if (isStreaming && response.body) {
