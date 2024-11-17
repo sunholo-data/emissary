@@ -68,7 +68,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
             contents.append({"role":"model", "parts":[{"text": ai}]})
 
     span.end(output = contents)
-    log.info(contents)
+    log.info(f"{contents}")
     model_name = config.vacConfig("model") or "gemini-1.5-flash"
 
     gen = trace.generation(
@@ -78,14 +78,19 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     )
     
     chunks=""
+    log.info(f"Calling count_tokens to test {FREE_TOKEN_LIMIT} tokens")
     tokens = model.count_tokens(contents)
     total_tokens = tokens.total_tokens
+    log.info(f"{tokens=} {total_tokens=} {type(total_tokens)}")
+
     if total_tokens is None:
         chunks = "Could not calculate total tokens so aborting request."
         callback.on_llm_new_token(token=chunks)
+        response=None
     if total_tokens > FREE_TOKEN_LIMIT:
-        chunks = f"Total tokens is > {FREE_TOKEN_LIMIT} which is not permitted for free plans"
+        chunks = f"The total tokens sent to the emissary was [{total_tokens}] which is greater than [{FREE_TOKEN_LIMIT}].  Consider upgrading or reduce document size."
         callback.on_llm_new_token(token=chunks)
+        response=None
 
     usage = {
         "input":0,
@@ -95,6 +100,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     }
     usage_metadata = {}
     if not chunks:
+      log.info(f"Tokens {total_tokens} < {FREE_TOKEN_LIMIT} tokens so calling model")
       response: GenerateContentResponse = model.generate_content(contents, stream=True)
       for chunk in response:
           if chunk:
@@ -103,14 +109,15 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
                   chunks += chunk.text
               except ValueError as err:
                   log.error(f"Error generating chunk: {str(err)}")
-      
-      # stream has finished, full response is also returned
-      callback.on_llm_end(response=response)
+
       usage_metadata = response.usage_metadata
       usage["input"] = usage_metadata.prompt_token_count
       usage["output"] = usage_metadata.candidates_token_count
       usage["total"]  = usage_metadata.total_token_count
       log.info(f"model.response: {response} {usage_metadata=}")
+    
+    # stream has finished, full response is also returned
+    callback.on_llm_end(response=response)
 
     gen.end(output=chunks, usage=usage)
 
