@@ -12,7 +12,7 @@ import LoginDialog from "@/components/LoginDialog";
 import type { Document } from '@/types';
 
 const WELCOME_BOT_SHARE_ID = 'welcome-emissary';
-const WELCOME_ADMIN_EMAIL = 'm@sunholo.com';
+const WELCOME_ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 
 export default function Page() {
   const [accepted, setAccepted] = useState(false);
