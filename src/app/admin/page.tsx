@@ -77,7 +77,7 @@ export default function AdminPage() {
                 const bots = await FirebaseService.getUserBots(currentUser.uid);
                // If user is admin, also fetch the welcome bot
                if (currentUser.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-                console.log("User is admin loading welcome bot");
+                    console.log("User is admin - loading welcome bot");
                     try {
                         const welcomeBot = await FirebaseService.getWelcomeBot();
                         if (welcomeBot) {
@@ -88,7 +88,7 @@ export default function AdminPage() {
                                     ...welcomeBot,
                                     shareId: 'welcome-emissary',
                                     botId: 'welcome-emissary',
-                                    botName: 'Emisary Helper',
+                                    botName: 'Emissary Helper',
                                     botAvatar: '/images/avatars/emissary.png',
                                     recipientName: 'Everyone',
                                     adminEmail: process.env.NEXT_PUBLIC_ADMIN_EMAIL,
@@ -447,8 +447,10 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
 
   setIsUploading(true);
   try {
+    const storageUserId = shareId === 'welcome-emissary' ? 'welcome-emissary' : currentUser.uid;
+
       const document = await DocumentHandler.handleFileUpload(event, {
-          userId: shareId === 'welcome-emissary' ? 'welcome-bot' : currentUser.uid,
+          userId: storageUserId,
           shareId,
           currentDocuments: config.initialDocuments || [],
       });
