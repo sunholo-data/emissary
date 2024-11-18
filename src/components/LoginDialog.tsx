@@ -1,5 +1,5 @@
 // src/components/LoginDialog.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import FirebaseService from '@/lib/firebase';
 import { Github, Mail } from 'lucide-react';
+import { useSidebar } from "@/components/ui/sidebar";
+
 
 interface LoginDialogProps {
   open: boolean;
@@ -19,6 +21,13 @@ export default function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  useEffect(() => {
+    if (open && isMobile) {
+      setOpenMobile(false);
+    }
+  }, [open, isMobile, setOpenMobile]);
 
   const handleEmailLogin = async () => {
     try {
