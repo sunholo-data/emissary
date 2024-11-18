@@ -102,13 +102,10 @@ service cloud.firestore {
     // Welcome bot special case
     match /chatMessages/welcome-emissary {
       allow read: if true;
-      allow create: if isWelcomeAdmin();
+      allow write: if isWelcomeAdmin();
       
       match /messages/{messageId} {
-        // Allow reading all messages
         allow read: if true;
-        
-        // Allow listing messages (for queries)
         allow list: if true;
         
         allow create: if isAuthenticated() && 

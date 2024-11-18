@@ -1,12 +1,10 @@
+// vacChat.ts
 import type { VacChatParams } from '@/types';
 
-// Configure timeouts and retries
-const STREAM_TIMEOUT = 60000; // 60 seconds
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
+const STREAM_TIMEOUT = 1200000; // 120 seconds
 
 // Request lock with timeout to prevent stuck states
-let streamLock: { isStreaming: boolean; timestamp: number } = {
+let streamLock: { isStreaming: boolean; timestamp: number; requestId?: string } = {
     isStreaming: false,
     timestamp: 0
 };
@@ -20,25 +18,10 @@ const isLockStale = () => {
 // Reset lock if it's stale
 const resetStaleLock = () => {
     if (isLockStale()) {
-        console.warn('Detected stale stream lock, resetting');
+        console.warn('Detected stale stream lock, resetting', { 
+            requestId: streamLock.requestId 
+        });
         streamLock = { isStreaming: false, timestamp: 0 };
-    }
-};
-
-// Helper for retrying failed requests
-const retryWithBackoff = async (
-    operation: () => Promise<any>,
-    retries: number = MAX_RETRIES
-): Promise<any> => {
-    for (let i = 0; i < retries; i++) {
-        try {
-            return await operation();
-        } catch (error) {
-            if (i === retries - 1) throw error;
-            const delay = RETRY_DELAY * Math.pow(2, i);
-            console.log(`Retry ${i + 1}/${retries} after ${delay}ms`, error);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
     }
 };
 
@@ -54,59 +37,66 @@ export async function vacChat({
     resetStaleLock();
 
     if (streamLock.isStreaming) {
-        console.warn('Stream already in progress, refusing new request');
+        console.warn('Stream already in progress', { 
+            requestId: streamLock.requestId 
+        });
         throw new Error('A streaming request is already in progress');
     }
 
     let controller: AbortController | null = null;
     let accumulatedContent = '';
+    const requestId = Math.random().toString(36).substring(7);
 
     try {
-        streamLock = { isStreaming: true, timestamp: Date.now() };
+        streamLock = { 
+            isStreaming: true, 
+            timestamp: Date.now(),
+            requestId 
+        };
         
         controller = new AbortController();
         const timeoutId = setTimeout(() => {
             controller?.abort();
+            console.warn('Client timeout reached', { requestId });
         }, STREAM_TIMEOUT);
 
-        const response = await retryWithBackoff(async () => {
-            const resp = await fetch('/api/proxy', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'text/event-stream',
-                    'Cache-Control': 'no-cache',
-                    'Connection': 'keep-alive'
-                },
-                body: JSON.stringify({
-                    endpoint: apiEndpoint,
-                    user_input: userMessage,
-                    chat_history: chatHistory,
-                    humanChatHistory: humanChatHistory,
-                    instructions: instructions,
-                    documents: documents,
-                    isStreaming: true,
-                    stream_only: true,
-                    stream_wait_time: 1
-                }),
-                signal: controller!.signal
-            });
-
-            if (!resp.ok) {
-                throw new Error(`HTTP error! status: ${resp.status}`);
-            }
-            return resp;
+        const response = await fetch('/api/proxy', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Request-ID': requestId
+            },
+            body: JSON.stringify({
+                endpoint: apiEndpoint,
+                user_input: userMessage,
+                chat_history: chatHistory,
+                humanChatHistory: humanChatHistory,
+                instructions: instructions,
+                documents: documents,
+                isStreaming: true,
+                stream_only: true,
+                stream_wait_time: 1
+            }),
+            signal: controller.signal
         });
 
         clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`HTTP error! status: ${response.status}`, { 
+                cause: errorData 
+            });
+        }
 
         const reader = response.body?.getReader();
         if (!reader) throw new Error('No reader available');
 
         const decoder = new TextDecoder();
         
-        let isFirstChunk = true;
-
         try {
             while (true) {
                 const { done, value } = await reader.read();
@@ -115,59 +105,41 @@ export async function vacChat({
                     if (accumulatedContent) {
                         onBotMessage({ 
                             sender: 'bot', 
-                            content: accumulatedContent 
+                            content: accumulatedContent,
                         });
                     }
                     break;
                 }
                 
-                // Handle first chunk separately with retry logic
-                if (isFirstChunk) {
-                    try {
-                        const chunk = decoder.decode(value, { stream: true });
-                        if (chunk) {
-                            accumulatedContent = chunk;
-                            onBotMessage({ 
-                                sender: 'bot', 
-                                content: accumulatedContent 
-                            });
-                        }
-                        isFirstChunk = false;
-                    } catch (firstChunkError) {
-                        console.warn('Error processing first chunk:', firstChunkError);
-                        throw firstChunkError;
-                    }
-                } else {
-                    const chunk = decoder.decode(value, { stream: true });
-                    if (chunk) {
-                        accumulatedContent += chunk;
-                        onBotMessage({ 
-                            sender: 'bot', 
-                            content: accumulatedContent 
-                        });
-                    }
+                const chunk = decoder.decode(value, { stream: true });
+                if (chunk) {
+                    accumulatedContent += chunk;
+                    onBotMessage({ 
+                        sender: 'bot', 
+                        content: accumulatedContent,
+                    });
                 }
             }
         } finally {
             try {
                 await reader.cancel();
             } catch (cancelError) {
-                console.warn('Error canceling reader:', cancelError);
+                console.warn('Error canceling reader:', cancelError, { 
+                    requestId 
+                });
             }
         }
     } catch (error) {
-        console.error('Streaming error:', error);
+        console.error('Streaming error:', error, { requestId });
         
-        // Only send error message if we haven't sent any content yet
         if (!accumulatedContent) {
             onBotMessage({ 
                 sender: 'bot', 
-                content: 'Sorry, an error occurred. Please try again.' 
+                content: 'Sorry, an error occurred. Please try again.',
             });
         }
         throw error;
     } finally {
-        // Cleanup
         controller?.abort();
         streamLock = { isStreaming: false, timestamp: 0 };
     }

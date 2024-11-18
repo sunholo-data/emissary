@@ -291,6 +291,51 @@ export function initFirebase() {
   }
 
   // Firestore Methods
+  static async getWelcomeBot() {
+    // Change from 'welcome-bot' to 'chatMessages'
+    const docRef = doc(this.db, 'chatMessages', 'welcome-emissary');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        return {
+            botId: 'welcome-bot',
+            botName: data.botName || "Emissary Helper",
+            botAvatar: data.botAvatar || "/images/avatars/emissary.png",
+            recipientName: "Everyone",
+            adminEmail: process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+            initialMessage: data.initialMessage,
+            initialInstructions: data.initialInstructions,
+            initialDocuments: data.initialDocuments || [],
+            metadata: data.metadata || {
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                isActive: true
+            }
+        };
+    }
+    return null;
+}
+
+static async updateWelcomeBot(config: any) {
+  // Change from 'welcome-bot' to 'chatMessages'
+  const docRef = doc(this.db, 'chatMessages', 'welcome-emissary');
+  await setDoc(docRef, {
+      botId: 'welcome-bot',
+      botName: config.botName || "Emissary Helper",
+      botAvatar: config.botAvatar || "/images/avatars/emissary.png",
+      recipientName: "Everyone",
+      adminEmail: process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+      initialMessage: config.initialMessage,
+      initialInstructions: config.initialInstructions,
+      initialDocuments: config.initialDocuments || [],
+      metadata: {
+          updatedAt: Date.now(),
+          lastAccessedAt: Date.now(),
+          isActive: true
+      }
+  }, { merge: true });
+}
+
   static async getConfigForUser(userId: string, shareId: string): Promise<ConfigProps> {
     if (typeof window === 'undefined') throw new Error('This method can only be used in the browser');
     try {
@@ -932,47 +977,34 @@ export function initFirebase() {
     if (typeof window === 'undefined') return;
 
     try {
-      // Create welcome bot config if it doesn't exist
-      const welcomeBotConfig = {
-        shareId: 'welcome-emissary',
-        botId: 'welcome-bot',
-        botName: "Emissary Helper",
-        senderName: "Mark Edmondson",
-        recipientName: "Everyone",
-        adminEmail: process.env.NEXT_PUBLIC_ADMIN_EMAIL,
-        initialDocuments: [],
-        metadata: {
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          isActive: true,
-          planTier: 'free',
-          usageCount: 0,
-          lastAccessedAt: Date.now()
-        }
-      };
+        const welcomeBotConfig = {
+            botId: 'welcome-bot',
+            botName: "Emissary Helper",
+            botAvatar: "/images/avatars/emissary.png",
+            senderName: "Mark Edmondson",
+            recipientName: "Everyone",
+            adminEmail: process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+            initialDocuments: [],
+            metadata: {
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                isActive: true
+            }
+        };
 
-      const welcomeRef = doc(this.db, 'chatMessages', 'welcome-emissary');
-      
-      // First try to get the existing config
-      try {
+        // Change from 'welcome-bot' to 'chatMessages'
+        const welcomeRef = doc(this.db, 'chatMessages', 'welcome-emissary');
+        
         const welcomeDoc = await getDoc(welcomeRef);
         if (!welcomeDoc.exists()) {
-          // Only try to create if we're authenticated as the admin
-          const currentUser = this.auth.currentUser;
-          if (currentUser?.email === welcomeBotConfig.adminEmail) {
-            await setDoc(welcomeRef, welcomeBotConfig);
-            console.log('Welcome bot initialized successfully');
-          } else {
-            console.log('Welcome bot not initialized - requires admin privileges');
-          }
+            const currentUser = this.auth.currentUser;
+            if (currentUser?.email === welcomeBotConfig.adminEmail) {
+                await setDoc(welcomeRef, welcomeBotConfig);
+                console.log('Welcome bot initialized successfully');
+            }
         }
-      } catch (error) {
-        // Just log the error but don't throw - the welcome bot can still function without the config
-        console.warn('Error checking welcome bot config:', error);
-      }
     } catch (error) {
-      // Log but don't throw - this isn't critical for the app to function
-      console.warn('Error in welcome bot initialization:', error);
+        console.warn('Error in welcome bot initialization:', error);
     }
   }
 }
