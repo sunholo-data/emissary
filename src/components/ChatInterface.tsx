@@ -58,6 +58,37 @@ export default function ChatInterface({
     };
   }, [activeChat]);
 
+  // Add meta viewport tag management
+  useEffect(() => {
+    // Save the original viewport meta tag content
+    const originalViewport = document.querySelector('meta[name="viewport"]')?.getAttribute('content');
+    
+    // Update viewport meta to prevent zooming
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+      viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1');
+    } else {
+      const newViewportMeta = document.createElement('meta');
+      newViewportMeta.name = 'viewport';
+      newViewportMeta.content = 'width=device-width, initial-scale=1, maximum-scale=1';
+      document.head.appendChild(newViewportMeta);
+    }
+
+    // Cleanup function to restore original viewport settings
+    return () => {
+      const viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (viewportMeta && originalViewport) {
+        viewportMeta.setAttribute('content', originalViewport);
+      }
+    };
+  }, []);
+
+  // Prevent default zoom behavior on input focus for iOS
+  const preventZoom = (e: React.FocusEvent<HTMLInputElement>) => {
+    const target = e.target as HTMLInputElement;
+    target.style.fontSize = '16px'; // Minimum font size to prevent zoom on iOS
+  };
+
   // Memoize the chat history formatters
 const formatBotHistory = useCallback((messages: Message[]) => {
   return messages.map((msg) => ({
@@ -253,19 +284,101 @@ const renderMessages = useCallback((messages: Message[], currentTab: 'bot' | 'hu
     }
   };
 
+  // Modified input wrapper with improved mobile handling
+  const renderInputArea = () => {
+    if (activeChat === 'bot') {
+      return (
+        <>
+          <Input
+            className="text-base" // Ensure readable font size on mobile
+            placeholder={`Ask a question to ${botName}...`}
+            value={input}
+            onChange={(e) => onInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={preventZoom}
+            disabled={isStreaming}
+            style={{
+              fontSize: '16px', // Prevent zoom on iOS
+              WebkitAppearance: 'none', // Prevent iOS styling
+              borderRadius: '8px' // Ensure consistent styling
+            }}
+          />
+          <Button 
+            onClick={onSendMessage}
+            disabled={isStreaming || !input.trim()}
+            className="min-w-[44px] min-h-[44px]" // Ensure touchable size
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </>
+      );
+    } else if (userState === 'not-logged-in') {
+      return (
+        <Button 
+          onClick={onLogin} 
+          className="w-full min-h-[44px]" // Ensure touchable size
+        >
+          <LogIn className="w-4 h-4 mr-2" /> Log in to reply to {senderName}
+        </Button>
+      );
+    } else {
+      return (
+        <>
+          <Input
+            className="text-base" // Ensure readable font size on mobile
+            placeholder={`Reply to ${userState === 'admin' ? recipientName : senderName}...`}
+            value={input}
+            onChange={(e) => onInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={preventZoom}
+            disabled={isStreaming}
+            style={{
+              fontSize: '16px', // Prevent zoom on iOS
+              WebkitAppearance: 'none', // Prevent iOS styling
+              borderRadius: '8px' // Ensure consistent styling
+            }}
+          />
+          <Button 
+            onClick={onSendMessage}
+            disabled={isStreaming || !input.trim()}
+            className="min-w-[44px] min-h-[44px]" // Ensure touchable size
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </>
+      );
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <Tabs value={activeChat} onValueChange={(value) => setActiveChat(value as 'bot' | 'human')} className="flex flex-col h-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="bot">{botName}</TabsTrigger>
-          <TabsTrigger value="human">
-            Reply to {userState === 'admin' ? recipientName : senderName}
-          </TabsTrigger>
-        </TabsList>
-
-        <div className="flex-grow flex flex-col min-h-0 overflow-hidden">
-          <TabsContent value="bot" className="flex-grow flex flex-col data-[state=active]:flex overflow-hidden">
-            <ScrollArea className="flex-grow">
+      <Tabs 
+        value={activeChat} 
+        onValueChange={(value) => setActiveChat(value as 'bot' | 'human')} 
+        className="flex flex-col h-full"
+      >
+    <div className="w-full border-b bg-muted">
+      <TabsList className="w-full grid grid-cols-2 rounded-none border-0 bg-transparent p-0">
+            <TabsTrigger 
+              value="bot"
+              className="min-h-[44px] rounded-none border-0 data-[state=active]:bg-white data-[state=active]:shadow-none px-4"
+              >
+              {botName}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="human"
+              className="min-h-[44px] rounded-none border-0 data-[state=active]:bg-white data-[state=active]:shadow-none px-4"
+              >
+              Reply to {userState === 'admin' ? recipientName : senderName}
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        <div className="flex-grow flex flex-col min-h-0 overflow-hidden bg-white">
+        <TabsContent 
+          value="bot" 
+          className="flex-grow flex flex-col data-[state=active]:flex overflow-hidden m-0 border-0 p-0"
+        >
+          <ScrollArea className="flex-grow">
               <div className="p-4 space-y-4" ref={botScrollAreaRef}>
                 {renderMessages(botMessages, "bot")}
                 {error && (
@@ -280,7 +393,10 @@ const renderMessages = useCallback((messages: Message[], currentTab: 'bot' | 'hu
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="human" className="flex-grow flex flex-col data-[state=active]:flex overflow-hidden">
+          <TabsContent 
+            value="human" 
+            className="flex-grow flex flex-col data-[state=active]:flex overflow-hidden m-0 border-0 p-0"
+          >
             <ScrollArea className="flex-grow">
               <div className="p-4 space-y-4" ref={humanScrollAreaRef}>
                 {renderMessages(humanMessages, "human")}
@@ -289,47 +405,8 @@ const renderMessages = useCallback((messages: Message[], currentTab: 'bot' | 'hu
           </TabsContent>
         </div>
 
-        <div className="flex space-x-2 p-4 border-t">
-        {activeChat === 'bot' ? (
-          // Always show input for bot chat
-          <>
-            <Input
-              placeholder={`Ask a question to ${botName}...`}
-              value={input}
-              onChange={(e) => onInputChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isStreaming}
-            />
-            <Button 
-              onClick={onSendMessage}
-              disabled={isStreaming || !input.trim()}
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </>
-        ) : userState === 'not-logged-in' ? (
-          // Show login button for human chat when not logged in
-          <Button onClick={onLogin} className="w-full">
-            <LogIn className="w-4 h-4 mr-2" /> Log in to reply to {senderName}
-          </Button>
-        ) : (
-          // Show input for human chat when logged in
-          <>
-            <Input
-              placeholder={`Reply to ${userState === 'admin' ? recipientName : senderName}...`}
-              value={input}
-              onChange={(e) => onInputChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isStreaming}
-            />
-            <Button 
-              onClick={onSendMessage}
-              disabled={isStreaming || !input.trim()}
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </>
-        )}
+        <div className="flex space-x-2 p-4 border-t bg-white">
+        {renderInputArea()}
       </div>
       </Tabs>
     </div>
