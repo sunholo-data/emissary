@@ -21,6 +21,34 @@ def format_human_chat_history(chat_history):
         formatted_history.append(f"{message['name']}: {message['content']}")
     return "\n".join(formatted_history)
 
+def first_impression(contents, instructions, trace=None):
+
+    system_msg = (f"Make sure to keep the persona and follow the instructions you have been given: {instructions}. "
+                  "The full answer will be delivered later, for now you need only give them a quick first impressions and answer to show you are thinking about it. "
+                  "Communicate back to the user you have received their question and state it back to them to show you have understood it.")
+    safe = genai_safety()
+    model_name="gemini-1.5-flash"
+
+    gen = trace.generation(
+        name="first_response",
+        model=model_name,
+        input = {'system_instruction': system_msg, 'contents': contents},
+    )
+    model = genai.GenerativeModel(
+        model_name=model_name,
+        safety_settings=safe,
+        system_instruction=system_msg,
+    )
+
+    response = model.generate_content(contents)
+    
+    gen.end(output=response.text)
+
+    if response:
+      return response.text
+    else:
+      return "No answer given"
+
 def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, **kwargs):
 
     config = ConfigManager(vector_name)
@@ -54,18 +82,24 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
         contents.append(
             {"role": "user", "parts":[{"text": human_history}]}
         )
+    
+    for human, ai in chat_history:
+        if human:
+            contents.append({"role":"user", "parts":[{"text": human}]})
+        if ai:
+            contents.append({"role":"model", "parts":[{"text": ai}]})
+
+    first_response = first_impression(contents, instructions=instructions, trace=trace)
+    log.info(f"First response: {first_response}")
+    callback.on_llm_new_token(token=first_response)
 
     if documents:
         doc_contents = asyncio.run(fetch_document_content(documents))
         if doc_contents:
             contents.extend(doc_contents)
 
-    for human, ai in chat_history:
-        if human:
-            contents.append({"role":"user", "parts":[{"text": human}]})
-        
-        if ai:
-            contents.append({"role":"model", "parts":[{"text": ai}]})
+    contents.append({"role":"model", "parts":[{"text": first_response}]})
+    contents.append({"role":"user", "parts":[{"text": "Please continue without referring to this message, expanding on your first impression answer." }]})
 
     span.end(output = contents)
     log.info(f"{contents}")
