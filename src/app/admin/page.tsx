@@ -39,6 +39,7 @@ import { DocumentUpload } from '@/components/DocumentUpload';
 import { useAlertDialog } from "@/components/hooks/use-alert-dialog"
 import { SuccessDialog } from '@/components/SuccessDialog';
 import { formatFileSize, calculateTotalSize } from '@/lib/utils';
+import { EmissaryList } from '@/components/EmissaryList';
 
 export default function AdminPage() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -728,90 +729,10 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
             )}
         </CardContent>
     </Card>
-
-          <Card>
-                    <CardHeader>
-                        <CardTitle>Your Emissary Dispatches</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-12">Avatar</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Recipient</TableHead>
-                                <TableHead>Created</TableHead>
-                                <TableHead>Uses</TableHead>
-                                <TableHead className="text-right">Documents</TableHead>
-                                <TableHead className="text-right">Total Size</TableHead>
-                                <TableHead>Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {userBots.map((bot) => (
-                                <TableRow key={bot.shareId}>
-                                    <TableCell>
-                                          <Avatar>
-                                            <AvatarImage src={bot.botAvatar} alt={bot.botName} />
-                                            <AvatarFallback>{bot.botName[0]}</AvatarFallback>
-                                          </Avatar>
-                                    </TableCell>
-                                    <TableCell className="font-medium">{bot.botName}</TableCell>
-                                    <TableCell>{bot.recipientName}</TableCell>
-                                    <TableCell>
-                                        {bot.createdAt instanceof Date 
-                                            ? bot.createdAt.toLocaleDateString()
-                                            : new Date(bot.createdAt).toLocaleDateString()}
-                                    </TableCell>
-                                    <TableCell>{bot.usageCount}</TableCell>
-                                    <TableCell className="text-right">
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                            <TooltipTrigger className="cursor-help">
-                                                {bot.initialDocuments?.length || 0}
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <div className="space-y-1">
-                                                {bot.initialDocuments?.map((doc, index) => (
-                                                    <div key={index} className="text-xs">
-                                                    {doc.name} ({formatFileSize(doc.size)})
-                                                    </div>
-                                                ))}
-                                                {(!bot.initialDocuments || bot.initialDocuments.length === 0) && (
-                                                    <div className="text-xs">No documents</div>
-                                                )}
-                                                </div>
-                                            </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {formatFileSize(calculateTotalSize(bot.initialDocuments))}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                onClick={() => handleEditBot(bot)}
-                                            >
-                                                Upload & Edit
-                                            </Button>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                onClick={() => window.open(bot.shareUrl, '_blank')}
-                                            >
-                                                View
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                                ))}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                </Card>
+    <EmissaryList 
+      bots={userBots} 
+      onEdit={handleEditBot} 
+    />
                         </>
                     )}
                 </div>

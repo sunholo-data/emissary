@@ -141,3 +141,27 @@ export const IconMap = {
 
 // Create a type from the IconMap keys
 export type FileIconType = keyof typeof IconMap;
+
+// all bots a user has access to
+export interface UserBot {
+    shareId: string;
+    botId: string;
+    botName: string;
+    botAvatar: string;
+    recipientName: string;
+    adminEmail: string;
+    initialMessage?: string;
+    initialInstructions?: string;
+    initialDocuments: Document[];
+    createdAt: Date;
+    updatedAt: Date;
+    shareUrl: string;
+    usageCount: number;
+    lastAccessedAt: Date;
+  }
+
+export interface EmissaryListProps {
+  bots: UserBot[];
+  onEdit?: (bot: UserBot) => void;
+  showEditButton?: boolean;
+}

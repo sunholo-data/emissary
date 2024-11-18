@@ -1,5 +1,3 @@
-// src/components/app-sidebar.tsx
-
 import { User } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarGroupContent,
 } from "@/components/ui/sidebar";
-import { Mail, User as UserIcon, Settings } from 'lucide-react';
+import { Mail, User as UserIcon, Settings, List } from 'lucide-react';
 import type { Document, UserState } from '@/types';
 import Image from 'next/image';
 import MultivacLogo from './MultivacLogo';
@@ -33,13 +31,12 @@ interface AppSidebarProps {
   documents: Document[];
   onShowLogin: () => void;
   onLogout: () => void;
-  // Admin-specific props
-  editingBotId?: string;              // Added to track which bot is being edited
-  isAdminPage?: boolean;              // Flag to indicate if we're in admin context
+  editingBotId?: string;
+  isAdminPage?: boolean;
   fileInputRef?: React.RefObject<HTMLInputElement>;
   onFileUpload?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onDeleteDocument?: (index: number) => void;
-  isUploading?: boolean; // Add this prop
+  isUploading?: boolean;
 }
 
 function getUserDisplayName(user: User | null): string {
@@ -100,26 +97,39 @@ export function AppSidebar({
           </div>
         </div>
         {!isAdminPage && (
-          userState !== 'not-logged-in' ? (
-            <Link href="/admin" className="block w-full">
+          <div className="space-y-2">
+            {userState !== 'not-logged-in' ? (
+              <>
+                <Link href="/admin" className="block w-full">
+                  <Button 
+                    variant="default" 
+                    className="w-full flex items-center justify-center gap-2 py-5"
+                  >
+                    <Settings size={16} />
+                    Create Emissary
+                  </Button>
+                </Link>
+                <Link href="/list" className="block w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center gap-2 py-5"
+                  >
+                    <List size={16} />
+                    View All Emissaries
+                  </Button>
+                </Link>
+              </>
+            ) : (
               <Button 
                 variant="default" 
                 className="w-full flex items-center justify-center gap-2 py-5"
+                onClick={onShowLogin}
               >
                 <Settings size={16} />
-                Create Emissary
+                Log in to Create Emissary
               </Button>
-            </Link>
-          ) : (
-            <Button 
-              variant="default" 
-              className="w-full flex items-center justify-center gap-2 py-5"
-              onClick={onShowLogin}
-            >
-              <Settings size={16} />
-              Log in to Create Emissary
-            </Button>
-          )
+            )}
+          </div>
         )}
       </SidebarHeader>
 
@@ -148,14 +158,12 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Only show documents in non-admin mode */}
         {!isAdminPage && (
           <DocumentSidebar 
             documents={documents}
             userState={userState}
           />
         )}
-
       </SidebarContent>
 
       <SidebarFooter>
