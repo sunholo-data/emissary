@@ -14,7 +14,7 @@
 
 /* Sidebar and overlay styles */
 [role="dialog"][data-sidebar="sidebar"] {
-  @apply bg-white z-[100] border-r shadow-lg lg:shadow-none;
+  @apply bg-white z-[100] border-r shadow-lg;
 }
 
 /* Single overlay definition for mobile */
@@ -27,14 +27,6 @@
     z-index: 40;
     pointer-events: auto;
   }
-
-  /* Mobile-specific sidebar styles */
-  .group\/sidebar-wrapper > div[data-state] {
-    @apply fixed inset-y-0 left-0 z-50 w-[280px] bg-white shadow-lg 
-           transform transition-transform duration-200 
-           data-[state=closed]:-translate-x-full 
-           data-[state=open]:translate-x-0;
-  }
 }
 
 /* Desktop sidebar styles */
@@ -46,7 +38,7 @@
 
 /* Remove all other overlay definitions and keep just these sidebar styles */
 .group\/sidebar-wrapper {
-  @apply relative flex;
+  @apply relative flex w-full bg-white;
 }
 
 .group\/sidebar-wrapper > div[data-state] {
@@ -54,7 +46,7 @@
          transform transition-transform duration-200 
          data-[state=closed]:-translate-x-full 
          data-[state=open]:translate-x-0 
-         lg:relative lg:translate-x-0;
+         lg:relative lg:translate-x-0 lg:shadow-none;
 }
 
 @layer base {

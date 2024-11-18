@@ -113,11 +113,11 @@ export default function Page() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-background">
       <SidebarProvider>
-        <div className="flex flex-1">
+        <div className="flex w-full">
           {/* Desktop sidebar */}
-          <div className="hidden lg:block w-[280px] border-r">
+          <div className="hidden lg:block w-[280px] border-r bg-white">
             <AppSidebar
               botName={defaultProps.botName}
               currentBotAvatar={defaultProps.botAvatar}
@@ -146,18 +146,17 @@ export default function Page() {
             />
           </div>
 
-          {/* Main content */}
-          <div className="flex-1 flex flex-col">
-            <div className="flex items-center p-4 border-b bg-white">
-              {/* Show trigger only on mobile */}
-              <div className="lg:hidden">
-                <SidebarTrigger className="mr-4" />
+          {/* Main content area */}
+          <div className="flex-1 flex flex-col bg-white">
+            <header className="flex h-14 items-center gap-4 border-b px-6 bg-white">
+              <SidebarTrigger className="lg:hidden" />
+              <div className="flex-1 flex items-center justify-between">
+                <h1 className="text-xl font-semibold">Messages</h1>
+                <div className="text-sm text-gray-500">
+                  Initiated by {defaultProps.senderName}
+                </div>
               </div>
-              <h1 className="text-xl font-semibold">Messages</h1>
-              <div className="ml-auto text-sm text-gray-500">
-                Initiated by {defaultProps.senderName}
-              </div>
-            </div>
+            </header>
             
             <main className="flex-1 p-6 overflow-hidden">
               <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden flex flex-col">
