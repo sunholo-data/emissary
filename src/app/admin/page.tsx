@@ -11,6 +11,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DocumentHandler } from '@/lib/document-handler';
 import { AppSidebar } from "@/components/app-sidebar";
 import LoginDialog from "@/components/LoginDialog";
+import EmissaryChoose from '@/components/EmissaryChoose';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
@@ -573,28 +574,14 @@ return (
                     <CardTitle>{editingBot ? 'Edit Dispatch Configuration' : 'Create New Dispatch Configuration'}</CardTitle>
                 </CardHeader>
                 <CardContent>
-            <div className="grid gap-6 max-w-4xl">
-              <div className="grid gap-2">
+            <div className="space-y-2 w-full">
+              <div className="w-full">
                 <Label>Select Emissary Template</Label>
-                <Select
-                    value={selectedTemplate}
-                    onValueChange={handleBotTemplateChange}
-                    >
-                    <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a bot template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                        <SelectLabel>Available Emissaries</SelectLabel>
-                        {availableTemplates.map(template => (
-                            <SelectItem key={template.botId} value={template.botId}>
-                            {template.name} {template.isTemplate ? '- Template' : ''}
-                            </SelectItem>
-                        ))}
-                        <SelectItem value="custom">Custom Emissary</SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                    </Select>
+                <EmissaryChoose
+                    templates={availableTemplates}
+                    selectedTemplate={selectedTemplate}
+                    onSelect={handleBotTemplateChange}
+                  />
               </div>
               <div className="grid gap-2">
                 <Label>Current Emissary Avatar</Label>
