@@ -113,44 +113,65 @@ export default function Page() {
   }
 
   return (
-<div className="flex min-h-screen bg-gray-50">
-  <SidebarProvider>
-    <div className="group/sidebar-wrapper flex flex-1">
-      <AppSidebar
-        botName={defaultProps.botName}
-        currentBotAvatar={defaultProps.botAvatar}
-        senderName={defaultProps.senderName}
-        recipientName={defaultProps.recipientName}
-        userState={userState}
-        currentUser={currentUser}
-        documents={defaultProps.initialDocuments}
-        onShowLogin={() => setShowLoginDialog(true)}
-        onLogout={handleLogout}
-      />
-      
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
-        <div className="flex items-center p-4 border-b bg-white">
-          <SidebarTrigger className="lg:hidden mr-4" />
-          <h1 className="text-xl font-semibold">Messages</h1>
-          <div className="ml-auto text-sm text-gray-500">
-            Initiated by {defaultProps.senderName}
+    <div className="flex min-h-screen bg-gray-50">
+      <SidebarProvider>
+        <div className="flex flex-1">
+          {/* Desktop sidebar */}
+          <div className="hidden lg:block w-[280px] border-r">
+            <AppSidebar
+              botName={defaultProps.botName}
+              currentBotAvatar={defaultProps.botAvatar}
+              senderName={defaultProps.senderName}
+              recipientName={defaultProps.recipientName}
+              userState={userState}
+              currentUser={currentUser}
+              documents={defaultProps.initialDocuments}
+              onShowLogin={() => setShowLoginDialog(true)}
+              onLogout={handleLogout}
+            />
+          </div>
+
+          {/* Mobile sidebar - will be controlled by SidebarProvider */}
+          <div className="lg:hidden">
+            <AppSidebar
+              botName={defaultProps.botName}
+              currentBotAvatar={defaultProps.botAvatar}
+              senderName={defaultProps.senderName}
+              recipientName={defaultProps.recipientName}
+              userState={userState}
+              currentUser={currentUser}
+              documents={defaultProps.initialDocuments}
+              onShowLogin={() => setShowLoginDialog(true)}
+              onLogout={handleLogout}
+            />
+          </div>
+
+          {/* Main content */}
+          <div className="flex-1 flex flex-col">
+            <div className="flex items-center p-4 border-b bg-white">
+              {/* Show trigger only on mobile */}
+              <div className="lg:hidden">
+                <SidebarTrigger className="mr-4" />
+              </div>
+              <h1 className="text-xl font-semibold">Messages</h1>
+              <div className="ml-auto text-sm text-gray-500">
+                Initiated by {defaultProps.senderName}
+              </div>
+            </div>
+            
+            <main className="flex-1 p-6 overflow-hidden">
+              <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden flex flex-col">
+                <Emissary {...sharedProps} />
+              </div>
+            </main>
           </div>
         </div>
-        
-        <main className="flex-1 p-6 overflow-hidden">
-          <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden flex flex-col">
-            <Emissary {...sharedProps} />
-          </div>
-        </main>
-      </div>
-    </div>
 
-    <LoginDialog 
-      open={showLoginDialog} 
-      onOpenChange={setShowLoginDialog} 
-    />
-  </SidebarProvider>
-</div>
+        <LoginDialog 
+          open={showLoginDialog} 
+          onOpenChange={setShowLoginDialog} 
+        />
+      </SidebarProvider>
+    </div>
   );
 }
