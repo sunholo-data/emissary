@@ -10,6 +10,7 @@ import { User } from 'firebase/auth';
 import FirebaseService from '@/lib/firebase';
 import LoginDialog from "@/components/LoginDialog";
 import type { Document } from '@/types';
+import { cn } from '@/lib/utils';
 
 const WELCOME_BOT_SHARE_ID = 'welcome-emissary';
 const WELCOME_ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
@@ -112,43 +113,44 @@ export default function Page() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <SidebarProvider>
-        <div className="flex flex-1">
-          <AppSidebar
-            botName={defaultProps.botName}
-            currentBotAvatar={defaultProps.botAvatar}
-            senderName={defaultProps.senderName}
-            recipientName={defaultProps.recipientName}
-            userState={userState}
-            currentUser={currentUser}
-            documents={defaultProps.initialDocuments}
-            onShowLogin={() => setShowLoginDialog(true)}
-            onLogout={handleLogout}
-          />
-          
-          <div className="flex-1 flex flex-col">
-            <div className="flex items-center p-4 border-b bg-white">
-              <SidebarTrigger className="mr-4" />
-              <h1 className="text-xl font-semibold">Messages</h1>
-              <div className="ml-auto text-sm text-gray-500">
-                Initiated by {defaultProps.senderName}
-              </div>
-            </div>
-            
-            <main className="flex-1 p-6 overflow-hidden">
-              <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden flex flex-col">
-                <Emissary {...sharedProps} />
-              </div>
-            </main>
+<div className="flex min-h-screen bg-gray-50">
+  <SidebarProvider>
+    <div className="group/sidebar-wrapper flex flex-1">
+      <AppSidebar
+        botName={defaultProps.botName}
+        currentBotAvatar={defaultProps.botAvatar}
+        senderName={defaultProps.senderName}
+        recipientName={defaultProps.recipientName}
+        userState={userState}
+        currentUser={currentUser}
+        documents={defaultProps.initialDocuments}
+        onShowLogin={() => setShowLoginDialog(true)}
+        onLogout={handleLogout}
+      />
+      
+      {/* Main content */}
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-center p-4 border-b bg-white">
+          <SidebarTrigger className="lg:hidden mr-4" />
+          <h1 className="text-xl font-semibold">Messages</h1>
+          <div className="ml-auto text-sm text-gray-500">
+            Initiated by {defaultProps.senderName}
           </div>
         </div>
-
-        <LoginDialog 
-          open={showLoginDialog} 
-          onOpenChange={setShowLoginDialog} 
-        />
-      </SidebarProvider>
+        
+        <main className="flex-1 p-6 overflow-hidden">
+          <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 h-full overflow-hidden flex flex-col">
+            <Emissary {...sharedProps} />
+          </div>
+        </main>
+      </div>
     </div>
+
+    <LoginDialog 
+      open={showLoginDialog} 
+      onOpenChange={setShowLoginDialog} 
+    />
+  </SidebarProvider>
+</div>
   );
 }
