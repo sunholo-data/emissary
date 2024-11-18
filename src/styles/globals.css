@@ -12,6 +12,43 @@
   animation-delay: 300ms;
 }
 
+/* Sidebar and overlay styles */
+[role="dialog"][data-sidebar="sidebar"] {
+  @apply bg-white z-[100] border-r shadow-lg;
+}
+
+/* Single overlay definition for mobile */
+@media (max-width: 1024px) {
+  body[data-scroll-locked="1"]::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 40;
+    pointer-events: auto;
+  }
+}
+
+/* Desktop sidebar styles */
+@media (min-width: 1024px) {
+  .group\/sidebar-wrapper > div[data-state] {
+    @apply relative transform-none w-[280px] shadow-none;
+  }
+}
+
+/* Remove all other overlay definitions and keep just these sidebar styles */
+.group\/sidebar-wrapper {
+  @apply relative flex w-full bg-white;
+}
+
+.group\/sidebar-wrapper > div[data-state] {
+  @apply fixed inset-y-0 left-0 z-50 w-[280px] bg-white shadow-lg 
+         transform transition-transform duration-200 
+         data-[state=closed]:-translate-x-full 
+         data-[state=open]:translate-x-0 
+         lg:relative lg:translate-x-0 lg:shadow-none;
+}
+
 @layer base {
   :root {
     /* Direct HSL values instead of CSS custom property values */

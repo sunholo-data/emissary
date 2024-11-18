@@ -39,6 +39,7 @@ import { DocumentUpload } from '@/components/DocumentUpload';
 import { useAlertDialog } from "@/components/hooks/use-alert-dialog"
 import { SuccessDialog } from '@/components/SuccessDialog';
 import { formatFileSize, calculateTotalSize } from '@/lib/utils';
+import { EmissaryList } from '@/components/EmissaryList';
 
 export default function AdminPage() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -75,6 +76,36 @@ export default function AdminPage() {
             if (!currentUser) return;
             try {
                 const bots = await FirebaseService.getUserBots(currentUser.uid);
+               // If user is admin, also fetch the welcome bot
+               if (currentUser.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+                    console.log("User is admin - loading welcome bot");
+                    try {
+                        const welcomeBot = await FirebaseService.getWelcomeBot();
+                        if (welcomeBot) {
+                            // Add welcome bot to the list if it's not already there
+                            const welcomeBotExists = bots.some(bot => bot.shareId === 'welcome-emissary');
+                            if (!welcomeBotExists) {
+                                bots.unshift({
+                                    ...welcomeBot,
+                                    shareId: 'welcome-emissary',
+                                    botId: 'welcome-emissary',
+                                    botName: 'Emissary Helper',
+                                    botAvatar: '/images/avatars/emissary.png',
+                                    recipientName: 'Everyone',
+                                    adminEmail: process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+                                    updatedAt: new Date(),
+                                    lastAccessedAt: new Date(),
+                                    shareUrl: `${window.location.origin}`,
+                                    createdAt: new Date(),
+                                    usageCount: 0,
+                                    initialDocuments: welcomeBot.initialDocuments || []
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error loading welcome bot:', error);
+                    }
+                }
                 setUserBots(bots);
             } catch (error) {
                 console.error('Error loading user bots:', error);
@@ -198,6 +229,14 @@ export default function AdminPage() {
             initialInstructions: config.initialInstructions,
             initialDocuments: config.initialDocuments || []
         };
+
+        if (editingBot === 'welcome-emissary') {
+          // Special handling for welcome bot
+          await FirebaseService.updateWelcomeBot(updateConfig);
+        } else {
+            // Normal bot update
+            await FirebaseService.updateShareConfig(currentUser.uid, editingBot, updateConfig);
+        }
 
         await FirebaseService.updateShareConfig(currentUser.uid, editingBot, updateConfig);
 
@@ -409,8 +448,10 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
 
   setIsUploading(true);
   try {
+    const storageUserId = shareId === 'welcome-emissary' ? 'welcome-emissary' : currentUser.uid;
+
       const document = await DocumentHandler.handleFileUpload(event, {
-          userId: currentUser.uid,
+          userId: storageUserId,
           shareId,
           currentDocuments: config.initialDocuments || [],
       });
@@ -423,10 +464,19 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
           }));
 
           if (editingBot) {
-              await FirebaseService.updateShareConfig(currentUser.uid, editingBot, {
+            if (editingBot === 'welcome-emissary') {
+              await FirebaseService.updateWelcomeBot({
                   ...config,
                   initialDocuments: updatedDocuments
               });
+          } else {
+            await FirebaseService.updateShareConfig(currentUser.uid, editingBot, {
+              ...config,
+              initialDocuments: updatedDocuments
+          });
+
+          }
+
           }
       }
   } catch (error) {
@@ -444,35 +494,64 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
   }
 };
 
-  return (
-    <div className="flex min-h-screen bg-gray-50">
-    <SuccessDialog
-      isOpen={successDialog.isOpen}
-      onClose={() => setSuccessDialog(prev => ({ ...prev, isOpen: false }))}
-      title={successDialog.title}
-      message={successDialog.message}
-      shareUrl={successDialog.shareUrl}
-    />
-      <SidebarProvider>
-      <AppSidebar
-          botName={config.botName || ''}
-          currentBotAvatar={config.botAvatar || ''}
-          senderName={config.senderName || ''}
-          recipientName={config.recipientName || ''}
-          userState={userState}
-          currentUser={currentUser}
-          documents={config.initialDocuments || []}
-          fileInputRef={fileInputRef}
-          onShowLogin={() => setShowLoginDialog(true)}
-          onLogout={handleLogout}
-          onFileUpload={handleFileUpload}
-          onDeleteDocument={handleDeleteDocument}
-          isUploading={isUploading}
-          isAdminPage={true}
-          editingBotId={editingBot || undefined}
-        />
+return (
+  <div className="flex min-h-screen bg-background">
+    <SidebarProvider>
+      <div className="flex w-full">
+        {/* Desktop sidebar */}
+        <div className="hidden lg:block w-[280px] border-r bg-white">
+          <AppSidebar
+            botName={config.botName || ''}
+            currentBotAvatar={config.botAvatar || ''}
+            senderName={config.senderName || ''}
+            recipientName={config.recipientName || ''}
+            userState={userState}
+            currentUser={currentUser}
+            documents={config.initialDocuments || []}
+            fileInputRef={fileInputRef}
+            onShowLogin={() => setShowLoginDialog(true)}
+            onLogout={handleLogout}
+            onFileUpload={handleFileUpload}
+            onDeleteDocument={handleDeleteDocument}
+            isUploading={isUploading}
+            isAdminPage={true}
+            editingBotId={editingBot || undefined}
+          />
+        </div>
 
-        <div className="flex-1 p-6">
+        {/* Mobile sidebar - will be controlled by SidebarProvider */}
+        <div className="lg:hidden">
+          <AppSidebar
+            botName={config.botName || ''}
+            currentBotAvatar={config.botAvatar || ''}
+            senderName={config.senderName || ''}
+            recipientName={config.recipientName || ''}
+            userState={userState}
+            currentUser={currentUser}
+            documents={config.initialDocuments || []}
+            fileInputRef={fileInputRef}
+            onShowLogin={() => setShowLoginDialog(true)}
+            onLogout={handleLogout}
+            onFileUpload={handleFileUpload}
+            onDeleteDocument={handleDeleteDocument}
+            isUploading={isUploading}
+            isAdminPage={true}
+            editingBotId={editingBot || undefined}
+          />
+        </div>
+
+          {/* Main content area */}
+
+          <div className="grid gap-6 w-full max-w-4xl !important">
+
+            <header className="flex h-14 items-center gap-4 border-b px-6 bg-white">
+              <SidebarTrigger className="lg:hidden" />
+              <div className="flex-1 flex items-center justify-between">
+                <h1 className="text-xl font-semibold">Admin Dashboard</h1>
+              </div>
+            </header>
+
+            <main className="flex-1 p-6 overflow-auto">
           {!currentUser ? (
             <Card>
               <CardHeader>
@@ -494,14 +573,14 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
                     <CardTitle>{editingBot ? 'Edit Dispatch Configuration' : 'Create New Dispatch Configuration'}</CardTitle>
                 </CardHeader>
                 <CardContent>
-            <div className="grid gap-6">
+            <div className="grid gap-6 max-w-4xl">
               <div className="grid gap-2">
                 <Label>Select Emissary Template</Label>
                 <Select
                     value={selectedTemplate}
                     onValueChange={handleBotTemplateChange}
                     >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a bot template" />
                     </SelectTrigger>
                     <SelectContent>
@@ -520,7 +599,7 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
               <div className="grid gap-2">
                 <Label>Current Emissary Avatar</Label>
                 <div className="flex items-center gap-4 p-4 border rounded-lg">
-                  <div className="relative w-16 h-16 rounded-full overflow-hidden border">
+                <div className="relative w-16 h-16 shrink-0 rounded-full overflow-hidden border">
                     {config.botAvatar ? (                       
                       <img
                         src={config.botAvatar}
@@ -537,9 +616,9 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <p className="font-medium">{config.botName || 'Select a bot'}</p>
-                    <p className="text-sm text-gray-500">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{config.botName || 'Select a bot'}</p>
+                    <p className="text-sm text-gray-500 truncate">
                       {selectedTemplate === 'custom' ? 'Custom Bot' : `${config.botName} Template`}
                     </p>
                   </div>
@@ -557,6 +636,7 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
                         ...prev,
                         botName: e.target.value
                       }))}
+                      className="max-w-full"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -568,6 +648,7 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
                         ...prev,
                         botAvatar: e.target.value
                       }))}
+                      className="max-w-full"
                     />
                   </div>
                 </>
@@ -583,6 +664,7 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
                     recipientName: e.target.value
                   }))}
                   placeholder="Client name"
+                  className="max-w-full"
                 />
               </div>
 
@@ -596,6 +678,7 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
                     initialMessage: e.target.value
                   }))}
                   rows={4}
+                  className="w-full resize-y"
                 />
               </div>
 
@@ -609,6 +692,7 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
                     initialInstructions: e.target.value
                   }))}
                   rows={4}
+                  className="w-full resize-y"
                 />
               </div>
               {(editingBot) ? (
@@ -679,98 +763,29 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
             )}
         </CardContent>
     </Card>
-
-          <Card>
-                    <CardHeader>
-                        <CardTitle>Your Emissary Dispatches</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-12">Avatar</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Recipient</TableHead>
-                                <TableHead>Created</TableHead>
-                                <TableHead>Uses</TableHead>
-                                <TableHead className="text-right">Documents</TableHead>
-                                <TableHead className="text-right">Total Size</TableHead>
-                                <TableHead>Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {userBots.map((bot) => (
-                                <TableRow key={bot.shareId}>
-                                    <TableCell>
-                                          <Avatar>
-                                            <AvatarImage src={bot.botAvatar} alt={bot.botName} />
-                                            <AvatarFallback>{bot.botName[0]}</AvatarFallback>
-                                          </Avatar>
-                                    </TableCell>
-                                    <TableCell className="font-medium">{bot.botName}</TableCell>
-                                    <TableCell>{bot.recipientName}</TableCell>
-                                    <TableCell>
-                                        {bot.createdAt instanceof Date 
-                                            ? bot.createdAt.toLocaleDateString()
-                                            : new Date(bot.createdAt).toLocaleDateString()}
-                                    </TableCell>
-                                    <TableCell>{bot.usageCount}</TableCell>
-                                    <TableCell className="text-right">
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                            <TooltipTrigger className="cursor-help">
-                                                {bot.initialDocuments?.length || 0}
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <div className="space-y-1">
-                                                {bot.initialDocuments?.map((doc, index) => (
-                                                    <div key={index} className="text-xs">
-                                                    {doc.name} ({formatFileSize(doc.size)})
-                                                    </div>
-                                                ))}
-                                                {(!bot.initialDocuments || bot.initialDocuments.length === 0) && (
-                                                    <div className="text-xs">No documents</div>
-                                                )}
-                                                </div>
-                                            </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {formatFileSize(calculateTotalSize(bot.initialDocuments))}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                onClick={() => handleEditBot(bot)}
-                                            >
-                                                Upload & Edit
-                                            </Button>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                onClick={() => window.open(bot.shareUrl, '_blank')}
-                                            >
-                                                View
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                                ))}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                </Card>
-                        </>
-                    )}
-                </div>
-                <LoginDialog 
-                    open={showLoginDialog} 
-                    onOpenChange={setShowLoginDialog} 
-                />
-            </SidebarProvider>
+    <EmissaryList 
+      bots={userBots} 
+      onEdit={handleEditBot} 
+    />
+                </>
+              )}
+            </main>
+          </div>
         </div>
-    );
+
+        <SuccessDialog
+          isOpen={successDialog.isOpen}
+          onClose={() => setSuccessDialog(prev => ({ ...prev, isOpen: false }))}
+          title={successDialog.title}
+          message={successDialog.message}
+          shareUrl={successDialog.shareUrl}
+        />
+        
+        <LoginDialog 
+          open={showLoginDialog} 
+          onOpenChange={setShowLoginDialog} 
+        />
+      </SidebarProvider>
+    </div>
+  );
 }
