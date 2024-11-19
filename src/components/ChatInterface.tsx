@@ -31,6 +31,7 @@ export default function ChatInterface({
   userMessage,
   instructions,
   documents,
+  emissaryConfig
 }: ChatInterfaceProps) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -177,7 +178,8 @@ useEffect(() => {
       },
       apiEndpoint,
       instructions,
-      documents
+      documents,
+      emissaryConfig
   }).then(() => {
       if (!isMounted) return;
       setIsStreaming(false);
