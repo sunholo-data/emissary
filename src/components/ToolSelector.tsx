@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Check, AlertCircle, Search, Code, LineChart, BrainCircuit, ChevronDown, ChevronUp } from 'lucide-react';
+import { Cpu, Terminal } from 'lucide-react';
 import { Alert } from '@/components/markdown/Alert';
 import { Highlight } from '@/components/markdown/Highlight';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,12 +22,14 @@ interface Tool {
   icon: React.FC<{ className?: string }>;
   component?: CustomComponent;
   demo: () => React.ReactNode;
+  isPremium?: boolean; 
 }
 
 interface ToolSelectorProps {
   selectedTools: string[];
   onChange: (tools: string[]) => void;
   defaultTools?: string[];
+  defaultOpen?: boolean; 
 }
 
 const AVAILABLE_TOOLS: Tool[] = [
@@ -101,11 +104,46 @@ const AVAILABLE_TOOLS: Tool[] = [
     )
   },
   {
+    id: 'code_execution',
+    name: 'Code Execution',
+    description: 'Execute code to help inform answers',
+    category: 'Integration', 
+    icon: Cpu,
+    isPremium: false,
+    demo: () => (
+      <div className="space-y-4">
+        <div className="bg-black rounded-lg p-4 font-mono text-xs text-white">
+          <div className="flex items-center gap-2 mb-2 text-gray-400">
+            <Terminal className="h-4 w-4"/>
+            <span>Python Code Execution</span>
+          </div>
+          <div className="text-green-400">&gt;&gt;&gt; import pandas as pd</div>
+          <div className="text-white">&gt;&gt;&gt; df = pd.read_csv('data.csv')</div>
+          <div className="text-white">&gt;&gt;&gt; df.describe()</div>
+          <div className="text-green-400 whitespace-pre">
+ count  1000.0  1000.0
+ mean    15.5    82.4
+ std      5.2    12.3
+ min      0.0    45.6
+ max     32.1   120.8
+          </div>
+        </div>
+        <Alert>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/>
+            <span>Code execution environment ready</span>
+          </div>
+        </Alert>
+      </div>
+    )
+ },
+  {
     id: 'search',
     name: 'Web Search',
     description: 'Real-time web search access',
     category: 'Integration',
     icon: Search,
+    isPremium: true,
     demo: () => (
       <Alert>
         <div className="flex items-center gap-2">
@@ -120,6 +158,7 @@ const AVAILABLE_TOOLS: Tool[] = [
     name: 'API Integration',
     description: 'External API connections',
     category: 'Integration',
+    isPremium: true,
     icon: Code,
     demo: () => (
       <Alert>
@@ -134,15 +173,15 @@ const AVAILABLE_TOOLS: Tool[] = [
 
 const CATEGORIES = Array.from(new Set(AVAILABLE_TOOLS.map(tool => tool.category)));
 
-
 export default function ToolSelector({ 
     selectedTools, 
     onChange,
-    defaultTools = ['highlights', 'plots', 'alerts', 'tooltips'] // Default tools that should be on
+    defaultTools = ['highlights', 'plots', 'alerts', 'tooltips'], // Default tools that should be on
+    defaultOpen = false // Start collapsed
   }: ToolSelectorProps) {
     const [activeDemoId, setActiveDemoId] = React.useState(AVAILABLE_TOOLS[0].id);
     const [filter, setFilter] = React.useState('All');
-    const [isOpen, setIsOpen] = React.useState(true);
+    const [isOpen, setIsOpen] = React.useState(defaultOpen);
 
     // Initialize with defaults if no selections yet
     React.useEffect(() => {
@@ -269,6 +308,11 @@ export default function ToolSelector({
                           <div className="font-medium text-sm flex items-center gap-2">
                             <tool.icon className="h-4 w-4" />
                             <span className="truncate">{tool.name}</span>
+                            {tool.isPremium && (
+                                <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                                    PRO
+                                </Badge>
+                                )}
                           </div>
                           <div className="text-xs text-muted-foreground truncate">
                             {tool.description}
