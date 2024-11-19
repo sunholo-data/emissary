@@ -96,21 +96,28 @@ const AVAILABLE_TOOLS: Tool[] = [
     icon: LineChart,
     component: Plot,
     demo: () => {
-      const sampleData: RechartsPlotData = {
-        data: [
-          { x: 'A', y: 10 },
-          { x: 'B', y: 15 },
-          { x: 'C', y: 8 }
-        ],
-        series: [{ dataKey: 'y' }],
-        chartType: 'bar'
-      };
-      const sampleLayout: RechartsPlotLayout = {
-        title: 'Sample Chart',
-        showGrid: true
-      };
-      return <Plot data={sampleData} layout={sampleLayout} />;
-    }
+        const sampleData: RechartsPlotData = {
+          data: [
+            { x: 'A', y: 10 },
+            { x: 'B', y: 15 },
+            { x: 'C', y: 8 }
+          ],
+          series: [{ dataKey: 'y' }],
+          chartType: 'pie'
+        };
+        const sampleLayout: RechartsPlotLayout = {
+          title: 'Sample Chart',
+          showGrid: true,
+          margin: { top: 0, right: 0, bottom: 0, left: 0 }, // Smaller margins
+        };
+        return (
+            <Plot 
+              data={sampleData} 
+              layout={sampleLayout}
+              className="h-full" // Force height
+            />
+        );
+      }
   },
   {
     id: 'alerts',
@@ -476,16 +483,16 @@ export default function ToolSelector({
               </div>
   
               {/* Demo Preview */}
-              <div>
+              <div className="w-full lg:max-w-[400px]"> {/* Constrain width on desktop */}
                 <Label className="mb-2 block">Demo Preview</Label>
                 <Card>
-                  <ScrollArea className="h-[400px]">
-                    <CardContent className="p-4">
-                      {activeDemo?.()}
+                    <ScrollArea className="h-[400px]">
+                    <CardContent className="p-3">
+                        {activeDemo?.()}
                     </CardContent>
-                  </ScrollArea>
+                    </ScrollArea>
                 </Card>
-              </div>
+                </div>
             </div>
           </CardContent>
         </div>

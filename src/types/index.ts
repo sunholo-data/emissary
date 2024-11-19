@@ -133,6 +133,7 @@ export interface ShareConfig {
   initialMessage?: string;
   initialInstructions?: string;
   metadata: ShareMetadata;
+  tools?: string[]; 
 }
 
 

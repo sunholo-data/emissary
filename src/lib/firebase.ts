@@ -497,7 +497,8 @@ static async updateWelcomeBot(config: any) {
       adminEmail: share.adminEmail,
       initialMessage: share.initialMessage || bot.defaultMessage,
       initialInstructions: share.initialInstructions || bot.defaultInstructions,
-      shareId: share.shareId
+      shareId: share.shareId,
+      tools: share.tools || []
     };
   }
 
