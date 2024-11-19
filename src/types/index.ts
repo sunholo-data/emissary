@@ -2,12 +2,11 @@
 import { FileText, Image as ImageIcon, FileSpreadsheet, FileCode, Video, Music, File } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-
 export type UserState = 'not-logged-in' | 'receiver' | 'admin';
 
 export type Role = 'user' | 'bot' | 'other' | 'receiver' | 'admin';
 
-export type Plan = 'free' | 'basic' | 'premium';
+export type planTier = 'free' | 'basic' | 'premium';
 
 export interface Document {
   type: string;
@@ -19,15 +18,29 @@ export interface Document {
   uploadedAt?: Date; 
 }
 
-export type VacChatParams = {
+export interface BaseVacChatParams {
   userMessage: string;
-  chatHistory: { name: string; content: string }[];
-  humanChatHistory: { name: string; content: string }[];
-  onBotMessage: (message: ChatMessage) => void;
+  chatHistory: Array<{ name: string; content: string }>;
+  humanChatHistory: Array<{ name: string; content: string }>;
+  onBotMessage: (message: { sender: string; content: string }) => void;
   apiEndpoint: string;
-  instructions?: string;
-  documents?: Document[];
-};
+}
+
+// Allow any additional properties while maintaining type safety for required ones
+export interface VacChatParams extends BaseVacChatParams {
+  [key: string]: any;
+}
+
+interface UserConfig {
+  state: UserState
+  sender: string;
+  recipient: string;
+  email?: string;
+  displayName?: string;
+  photoURL?: string;
+  planTier?: planTier
+  // Add any other user-related config fields
+}
 
 export type ChatInterfaceProps = {
     botMessages: ChatMessage[];
@@ -48,6 +61,7 @@ export type ChatInterfaceProps = {
     userMessage: string | null;
     instructions?: string;
     documents?: Document[];
+    emissaryConfig?: EmissaryConfigState | undefined;
     voiceConfig?: {
       languageCode: string;
       name: string;
@@ -91,7 +105,7 @@ export interface ShareMetadata {
   createdAt: number;
   updatedAt: number;
   isActive: boolean;
-  planTier: Plan;
+  planTier: planTier;
   usageCount: number;
   lastAccessedAt: number;
 }
@@ -145,11 +159,11 @@ export interface UserBot {
     initialMessage?: string;
     initialInstructions?: string;
     initialDocuments: Document[];
-    createdAt: Date;
-    updatedAt: Date;
-    shareUrl: string;
-    usageCount: number;
-    lastAccessedAt: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
+    shareUrl?: string;
+    usageCount?: number;
+    lastAccessedAt?: Date;
   }
 
 export interface EmissaryListProps {

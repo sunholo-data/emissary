@@ -25,15 +25,7 @@ const resetStaleLock = () => {
     }
 };
 
-export async function vacChat({ 
-    userMessage, 
-    chatHistory, 
-    humanChatHistory,
-    onBotMessage, 
-    apiEndpoint,
-    instructions,
-    documents 
-}: VacChatParams) {
+export async function vacChat(params: VacChatParams) {
     resetStaleLock();
 
     if (streamLock.isStreaming) {
@@ -60,6 +52,29 @@ export async function vacChat({
             console.warn('Client timeout reached', { requestId });
         }, STREAM_TIMEOUT);
 
+        // Extract all params except onBotMessage to avoid context issues
+        const { 
+            onBotMessage, 
+            userMessage,
+            chatHistory,
+            humanChatHistory,
+            apiEndpoint,
+            ...configParams // Everything else goes here
+        } = params;
+
+        const requestBody = {
+            endpoint: apiEndpoint,
+            user_input: userMessage,
+            chat_history: chatHistory,
+            humanChatHistory: humanChatHistory,
+            isStreaming: true,
+            stream_only: true,
+            stream_wait_time: 1,
+            ...configParams // Other config params that don't conflict
+        };
+
+        console.log('Request body:', requestBody); // Debug log
+
         const response = await fetch('/api/proxy', {
             method: 'POST',
             headers: { 
@@ -69,17 +84,7 @@ export async function vacChat({
                 'Connection': 'keep-alive',
                 'X-Request-ID': requestId
             },
-            body: JSON.stringify({
-                endpoint: apiEndpoint,
-                user_input: userMessage,
-                chat_history: chatHistory,
-                humanChatHistory: humanChatHistory,
-                instructions: instructions,
-                documents: documents,
-                isStreaming: true,
-                stream_only: true,
-                stream_wait_time: 1
-            }),
+            body: JSON.stringify(requestBody),
             signal: controller.signal
         });
 
@@ -96,14 +101,16 @@ export async function vacChat({
         if (!reader) throw new Error('No reader available');
 
         const decoder = new TextDecoder();
+        let done = false;
         
         try {
-            while (true) {
-                const { done, value } = await reader.read();
+            while (!done) {
+                const result = await reader.read();
+                done = result.done;
                 
                 if (done) {
                     if (accumulatedContent) {
-                        onBotMessage({ 
+                        params.onBotMessage({ 
                             sender: 'bot', 
                             content: accumulatedContent,
                         });
@@ -111,14 +118,33 @@ export async function vacChat({
                     break;
                 }
                 
-                const chunk = decoder.decode(value, { stream: true });
+                const chunk = decoder.decode(result.value, { stream: true });
+
                 if (chunk) {
                     accumulatedContent += chunk;
-                    onBotMessage({ 
+                    console.log('Chunk received:', {
+                        chunkLength: chunk.length,
+                        totalLength: accumulatedContent.length,
+                        isDone: result.done
+                    });
+                    params.onBotMessage({ 
                         sender: 'bot', 
                         content: accumulatedContent,
                     });
                 }
+                
+                // Final flush of the decoder
+                const final = decoder.decode(undefined);
+                if (final) {
+                    accumulatedContent += final;
+                    params.onBotMessage({ 
+                        sender: 'bot', 
+                        content: accumulatedContent,
+                    });
+                }
+
+                console.log('Stream completed, total content length:', accumulatedContent.length);
+
             }
         } finally {
             try {
@@ -133,7 +159,7 @@ export async function vacChat({
         console.error('Streaming error:', error, { requestId });
         
         if (!accumulatedContent) {
-            onBotMessage({ 
+            params.onBotMessage({ 
                 sender: 'bot', 
                 content: 'Sorry, an error occurred. Please try again.',
             });
