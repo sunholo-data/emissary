@@ -11,11 +11,10 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
   Cell,
 } from 'recharts';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 
 export interface RechartsDataPoint {
   [key: string]: number | string;
@@ -60,7 +59,13 @@ export interface PlotProps {
 
 let plotCounter = 0;
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const COLORS = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))'
+];
 
 export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
   const plotId = useMemo(() => id || `plot-${++plotCounter}`, [id]);
@@ -96,11 +101,27 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
     }
   }, [layout]);
 
+  // Create shadcn/ui compatible config from series
+  const chartConfig = useMemo(() => {
+    if (!parsedData?.series) return {};
+    return parsedData.series.reduce((acc, series, index) => {
+      acc[series.dataKey] = {
+        label: series.dataKey,
+        color: series.color || COLORS[index % COLORS.length]
+      };
+      return acc;
+    }, {} as Record<string, { label: string; color: string }>);
+  }, [parsedData?.series]);
+
   if (!parsedData?.data || !parsedData?.series) {
     return (
-      <span className="inline-block w-full text-center text-gray-500 text-sm py-4">
-        Invalid or missing plot data
-      </span>
+      <Card className={className}>
+        <CardContent className="p-6">
+          <p className="text-center text-muted-foreground">
+            Invalid or missing plot data
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -111,13 +132,22 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
       case 'bar':
         return (
           <BarChart data={parsedData.data} margin={margin}>
-            {parsedLayout.showGrid !== false && <CartesianGrid strokeDasharray="3 3" />}
+            {parsedLayout.showGrid !== false && (
+              <CartesianGrid 
+                vertical={false} 
+                className="stroke-muted" 
+                strokeDasharray="3 3" 
+              />
+            )}
             <XAxis
               dataKey="x"
               label={parsedLayout.xAxisLabel ? {
                 value: parsedLayout.xAxisLabel,
                 position: 'bottom'
               } : undefined}
+              tickLine={false}
+              axisLine={false}
+              className="text-muted-foreground"
             />
             <YAxis
               label={parsedLayout.yAxisLabel ? {
@@ -125,14 +155,20 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
                 angle: -90,
                 position: 'insideLeft'
               } : undefined}
+              tickLine={false}
+              axisLine={false}
+              className="text-muted-foreground"
             />
-            <Tooltip />
-            {parsedLayout.showLegend !== false && <Legend />}
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {parsedLayout.showLegend !== false && (
+              <ChartLegend content={<ChartLegendContent />} />
+            )}
             {parsedData.series.map((series: SeriesConfig, index: number) => (
               <Bar
                 key={`${plotId}-${series.dataKey}`}
                 dataKey={series.dataKey}
-                fill={series.color || COLORS[index % COLORS.length]}
+                fill={`var(--color-${series.dataKey})`}
+                radius={4}
               />
             ))}
           </BarChart>
@@ -140,7 +176,7 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
 
       case 'pie':
         return (
-          <PieChart>
+          <PieChart margin={margin}>
             {parsedData.series.map((series: SeriesConfig, index: number) => (
               <Pie
                 key={`${plotId}-${series.dataKey}`}
@@ -154,19 +190,30 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
                 label
               >
                 {parsedData.data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={COLORS[index % COLORS.length]} 
+                  />
                 ))}
               </Pie>
             ))}
-            <Tooltip />
-            {parsedLayout.showLegend !== false && <Legend />}
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {parsedLayout.showLegend !== false && (
+              <ChartLegend content={<ChartLegendContent />} />
+            )}
           </PieChart>
         );
 
       case 'scatter':
         return (
           <ScatterChart margin={margin}>
-            {parsedLayout.showGrid !== false && <CartesianGrid strokeDasharray="3 3" />}
+            {parsedLayout.showGrid !== false && (
+              <CartesianGrid 
+                vertical={false} 
+                className="stroke-muted" 
+                strokeDasharray="3 3" 
+              />
+            )}
             <XAxis
               dataKey="x"
               type="number"
@@ -174,6 +221,9 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
                 value: parsedLayout.xAxisLabel,
                 position: 'bottom'
               } : undefined}
+              tickLine={false}
+              axisLine={false}
+              className="text-muted-foreground"
             />
             <YAxis
               dataKey="y"
@@ -183,14 +233,19 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
                 angle: -90,
                 position: 'insideLeft'
               } : undefined}
+              tickLine={false}
+              axisLine={false}
+              className="text-muted-foreground"
             />
-            <Tooltip />
-            {parsedLayout.showLegend !== false && <Legend />}
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {parsedLayout.showLegend !== false && (
+              <ChartLegend content={<ChartLegendContent />} />
+            )}
             {parsedData.series.map((series: SeriesConfig, index: number) => (
               <Scatter
                 key={`${plotId}-${series.dataKey}`}
                 data={parsedData.data}
-                fill={series.color || COLORS[index % COLORS.length]}
+                fill={`var(--color-${series.dataKey})`}
               />
             ))}
           </ScatterChart>
@@ -200,13 +255,22 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
       default:
         return (
           <LineChart data={parsedData.data} margin={margin}>
-            {parsedLayout.showGrid !== false && <CartesianGrid strokeDasharray="3 3" />}
+            {parsedLayout.showGrid !== false && (
+              <CartesianGrid 
+                vertical={false} 
+                className="stroke-muted" 
+                strokeDasharray="3 3" 
+              />
+            )}
             <XAxis
               dataKey="x"
               label={parsedLayout.xAxisLabel ? {
                 value: parsedLayout.xAxisLabel,
                 position: 'bottom'
               } : undefined}
+              tickLine={false}
+              axisLine={false}
+              className="text-muted-foreground"
             />
             <YAxis
               label={parsedLayout.yAxisLabel ? {
@@ -214,15 +278,20 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
                 angle: -90,
                 position: 'insideLeft'
               } : undefined}
+              tickLine={false}
+              axisLine={false}
+              className="text-muted-foreground"
             />
-            <Tooltip />
-            {parsedLayout.showLegend !== false && <Legend />}
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {parsedLayout.showLegend !== false && (
+              <ChartLegend content={<ChartLegendContent />} />
+            )}
             {parsedData.series.map((series: SeriesConfig, index: number) => (
               <Line
                 key={`${plotId}-${series.dataKey}`}
                 type={series.type || "monotone"}
                 dataKey={series.dataKey}
-                stroke={series.color || COLORS[index % COLORS.length]}
+                stroke={`var(--color-${series.dataKey})`}
                 dot={false}
               />
             ))}
@@ -232,14 +301,19 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
   };
 
   return (
-    <span
-      id={plotId}
-      className={`inline-block w-full h-64 ${className || ''}`}
-      style={{ minWidth: '300px', display: 'block', marginBottom: '1rem' }}
-    >
-      <ResponsiveContainer width="100%" height={256}>
-        {renderChart()}
-      </ResponsiveContainer>
-    </span>
+    <Card className={className} id={plotId}>
+      {parsedLayout.title && (
+        <CardHeader>
+          <CardTitle>{parsedLayout.title}</CardTitle>
+        </CardHeader>
+      )}
+      <CardContent className="p-6">
+        <ChartContainer config={chartConfig} className="h-[350px]">
+          {renderChart()}
+        </ChartContainer>
+      </CardContent>
+    </Card>
   );
 };
+
+export default Plot;
