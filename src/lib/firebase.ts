@@ -52,6 +52,8 @@ interface MessageFilter {
     createdAt: number;
     updatedAt: number;
     isTemplate: boolean;
+    tools?: string[]; // Add tools array
+
   }
 
   // all bots a user has access to
@@ -495,7 +497,8 @@ static async updateWelcomeBot(config: any) {
       adminEmail: share.adminEmail,
       initialMessage: share.initialMessage || bot.defaultMessage,
       initialInstructions: share.initialInstructions || bot.defaultInstructions,
-      shareId: share.shareId
+      shareId: share.shareId,
+      tools: share.tools || []
     };
   }
 

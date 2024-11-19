@@ -12,25 +12,6 @@ import { DocumentHandler } from '@/lib/document-handler';
 import { AppSidebar } from "@/components/app-sidebar";
 import LoginDialog from "@/components/LoginDialog";
 import EmissaryChoose from '@/components/EmissaryChoose';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ConfigProps, Document, UserState } from '@/types';
 import type { User } from 'firebase/auth';
 import FirebaseService, { BotConfig, UserBot } from '@/lib/firebase';
@@ -39,8 +20,8 @@ import { useToast } from "@/components/hooks/use-toast";
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { useAlertDialog } from "@/components/hooks/use-alert-dialog"
 import { SuccessDialog } from '@/components/SuccessDialog';
-import { formatFileSize, calculateTotalSize } from '@/lib/utils';
 import { EmissaryList } from '@/components/EmissaryList';
+import ToolSelector from '@/components/ToolSelector';
 
 export default function AdminPage() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -228,7 +209,8 @@ export default function AdminPage() {
             adminEmail: currentUser.email!,
             initialMessage: config.initialMessage,
             initialInstructions: config.initialInstructions,
-            initialDocuments: config.initialDocuments || []
+            initialDocuments: config.initialDocuments || [],
+            tools: config.tools || [],
         };
 
         if (editingBot === 'welcome-emissary') {
@@ -313,7 +295,8 @@ const handleCreateShare = async () => {
           adminEmail: currentUser.email!,
           initialDocuments: config.initialDocuments || [],
           initialMessage: config.initialMessage,
-          initialInstructions: config.initialInstructions
+          initialInstructions: config.initialInstructions,
+          tools: config.tools || [],
       };
 
       const shareId = await FirebaseService.createShareConfig(currentUser.uid, shareConfig);
@@ -511,6 +494,7 @@ const handleDuplicateBot = async (bot: UserBot) => {
           adminEmail: currentUser.email!,
           initialMessage: bot.initialMessage,
           initialInstructions: bot.initialInstructions,
+          tools: config.tools || [],
           initialDocuments: [] // Start with empty documents, they'll be copied next
       };
 
@@ -649,19 +633,28 @@ return (
 
             <main className="flex-1 p-6 overflow-auto">
           {!currentUser ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Login Access Required</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500 mb-4">
-                  You need to be logged in to create and manage emissary dispatches.
-                </p>
-                <Button onClick={() => setShowLoginDialog(true)}>
-                  Login to Continue
-                </Button>
-              </CardContent>
-            </Card>
+             <>
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Available Templates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <EmissaryChoose
+                    templates={availableTemplates}
+                    selectedTemplate={selectedTemplate}
+                    onSelect={() => setShowLoginDialog(true)} // Redirect to login instead of selecting
+                  />
+                  <div className="mt-6 text-center">
+                    <p className="text-gray-500 mb-4">
+                      Login to create and manage your own emissary dispatches
+                    </p>
+                    <Button onClick={() => setShowLoginDialog(true)}>
+                      Login to Continue
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+           </>
           ) : (
             <>
             <Card className="mb-6">
@@ -775,6 +768,16 @@ return (
                   }))}
                   rows={4}
                   className="w-full resize-y"
+                />
+              </div>
+              <div className="grid gap-2 overflow-hidden">
+                <Label>Tools & Features</Label>
+                <ToolSelector 
+                  selectedTools={config.tools || []}
+                  onChange={(tools) => setConfig(prev => ({
+                    ...prev,
+                    tools
+                  }))}
                 />
               </div>
               {(editingBot) ? (

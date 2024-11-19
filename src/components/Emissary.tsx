@@ -25,6 +25,7 @@ export type EmissaryProps = {
   showLoginDialog: boolean;
   setShowLoginDialog: (show: boolean) => void;
   handleLogout: () => Promise<void>;
+  tools?: string[];
 };
 
 export default function Emissary({
@@ -39,7 +40,8 @@ export default function Emissary({
   userState,
   currentUser,
   showLoginDialog,
-  setShowLoginDialog
+  setShowLoginDialog,
+  tools = []
 }: EmissaryProps) {
   const [botMessages, setBotMessages] = useState<ChatMessage[]>([{ sender: 'bot', content: initialMessage }]);
   const [humanMessages, setHumanMessages] = useState<ChatMessage[]>([]);
@@ -55,7 +57,8 @@ export default function Emissary({
     initialDocuments,
     adminEmail: '',
     initialMessage,
-    initialInstructions
+    initialInstructions,
+    tools
   });
   const { toast } = useToast();
 

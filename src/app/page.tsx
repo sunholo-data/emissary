@@ -50,6 +50,7 @@ export default function Page() {
   const defaultProps = {
     ...baseProps,
     ...getUserProps(),
+    tools: ["preview", "highlights","plots","alerts", "tooltips", "code_execution"],
     initialMessage: `Hello, I'm here to help explain what Sunholo Emissary is. Ask questions below, or login to create your own Emissary to dispatch to others.`,
     initialInstructions:`
     You are named Sunholo Emissary.  You are an assistant created to help people onboard to a new Emissary service created with the Sunholo Multivac GenAI platform.  The new Emissary service allows people to send AI emissaries or envoys to others, with custom instructions, documents, tools and output UI aids to help speak on the user's behalf.

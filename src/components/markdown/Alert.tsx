@@ -10,7 +10,6 @@ export const Alert: React.FC<BaseCustomProps> = ({
 }) => (
   <>
     {/* Add a line break before and after for block-level spacing */}
-    <br />
     <span 
       className={twMerge(
         "block", // Make it block-level without using div
@@ -24,6 +23,5 @@ export const Alert: React.FC<BaseCustomProps> = ({
     >
       {children}
     </span>
-    <br />
   </>
 );

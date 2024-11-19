@@ -17,6 +17,14 @@
   @apply bg-white z-[100] border-r shadow-lg;
 }
 
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Single overlay definition for mobile */
 @media (max-width: 1024px) {
   body[data-scroll-locked="1"]::before {
@@ -107,13 +115,15 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
+  *,
+  *::before,
+  *::after {
+    border-color: var(--border);
   }
+  
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
   }
 }

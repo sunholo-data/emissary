@@ -65,6 +65,11 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     documents = kwargs.get('documents')
     model = create_model(config, instructions=instructions, trace_id=trace_id)
     humanChatHistory = kwargs.get('humanChatHistory')
+    emissaryConfig = kwargs.get('emissaryConfig')
+
+    tools = []
+    if emissaryConfig is not None:
+        tools = emissaryConfig.get('tools')
 
     span = langfuse.span(
         trace_id=trace_id,
@@ -133,11 +138,17 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
         "unit": "TOKENS"
     }
     usage_metadata = {}
+
+    use_code_tool = None
+    if tools:
+      use_code_tool = "code_execution" if "code_execution" in tools else None
+      log.info(f"{use_code_tool=} {tools=}")
+
     if not chunks:
       log.info(f"Tokens {total_tokens} < {FREE_TOKEN_LIMIT} tokens so calling model")
       response: GenerateContentResponse = model.generate_content(contents, 
                                                                  stream=True, 
-                                                                 tools='code_execution')
+                                                                 tools=use_code_tool)
       for chunk in response:
           if chunk:
               try:
