@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,7 +20,7 @@ import {
 } from "@/components/ui/carousel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { UserBot } from '@/lib/firebase';
-import { Edit2, Eye, TableIcon, LayoutGrid } from 'lucide-react';
+import { Edit2, Eye, TableIcon, LayoutGrid, Copy } from 'lucide-react';
 import { formatFileSize, calculateTotalSize } from '@/lib/utils';
 
 interface EmissaryListProps {
@@ -27,15 +28,22 @@ interface EmissaryListProps {
   onEdit?: (bot: UserBot) => void;
   onView?: (bot: UserBot) => void;
   showEditButton?: boolean;
+  onDuplicate?: (bot: UserBot) => void;
 }
 
 export const EmissaryList = ({ 
   bots, 
   onEdit, 
   onView,
-  showEditButton = true 
+  showEditButton = true,
+  onDuplicate 
 }: EmissaryListProps) => {
   const [viewMode, setViewMode] = useState<'table' | 'carousel'>('carousel');
+
+  const formatCreatedAt = (date: Date | string) => {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return formatDistanceToNow(dateObj, { addSuffix: true });
+  };
 
   const renderTable = () => (
     <Table>
@@ -47,7 +55,7 @@ export const EmissaryList = ({
           <TableHead className="hidden md:table-cell">Created</TableHead>
           <TableHead className="hidden md:table-cell">Uses</TableHead>
           <TableHead className="hidden md:table-cell">Documents</TableHead>
-          <TableHead className="w-24">Actions</TableHead>
+          <TableHead className="w-32">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -62,9 +70,16 @@ export const EmissaryList = ({
             <TableCell className="font-medium">{bot.botName}</TableCell>
             <TableCell className="hidden md:table-cell">{bot.recipientName}</TableCell>
             <TableCell className="hidden md:table-cell">
-              {bot.createdAt instanceof Date 
-                ? bot.createdAt.toLocaleDateString()
-                : new Date(bot.createdAt).toLocaleDateString()}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    {formatCreatedAt(bot.createdAt)}
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {new Date(bot.createdAt).toLocaleString()}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </TableCell>
             <TableCell className="hidden md:table-cell">{bot.usageCount}</TableCell>
             <TableCell className="hidden md:table-cell">
@@ -88,21 +103,51 @@ export const EmissaryList = ({
             <TableCell>
               <div className="flex gap-2">
                 {showEditButton && onEdit && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => onEdit(bot)}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => onEdit(bot)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Edit</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => onView ? onView(bot) : window.open(bot.shareUrl, '_blank')}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
+                {onDuplicate && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => onDuplicate(bot)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Duplicate</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onView ? onView(bot) : window.open(bot.shareUrl, '_blank')}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>View</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </TableCell>
           </TableRow>
@@ -112,57 +157,75 @@ export const EmissaryList = ({
   );
 
   const renderCarousel = () => (
-    <Carousel opts={{loop: true}} className="w-full max-w-5xl mx-auto">
-      <CarouselContent className="-ml-1">
-        {bots.map((bot) => (
-          <CarouselItem key={bot.shareId} className="pl-1 basis-full sm:basis-1/2 lg:basis-1/3">
-            <Card className="h-[400px] max-w-[300px] mx-auto">
-              <CardContent className="flex flex-col items-center p-4 h-full">
-                <Avatar className="w-20 h-20 mb-4">
-                  <AvatarImage src={bot.botAvatar} alt={bot.botName} />
-                  <AvatarFallback>{bot.botName[0]}</AvatarFallback>
-                </Avatar>
-                <h3 className="font-semibold text-center mb-2 line-clamp-1">{bot.botName}</h3>
-                <p className="text-sm text-gray-500 text-center mb-2">
-                  For: {bot.recipientName}
-                </p>
-                <div className="text-sm text-gray-600 space-y-2 mb-4">
-                  <p>Created: {bot.createdAt instanceof Date 
-                    ? bot.createdAt.toLocaleDateString()
-                    : new Date(bot.createdAt).toLocaleDateString()}
+    <div className="relative w-full max-w-5xl mx-auto px-12"> {/* Add padding for carousel buttons */}
+      <Carousel opts={{loop: true}} className="w-full">
+        <CarouselContent className="-ml-1">
+          {bots.map((bot) => (
+            <CarouselItem key={bot.shareId} className="pl-1 basis-full sm:basis-1/2 lg:basis-1/3">
+              <Card className="h-[400px] max-w-[300px] mx-auto">
+                <CardContent className="flex flex-col items-center p-4 h-full">
+                  <Avatar className="w-20 h-20 mb-4">
+                    <AvatarImage src={bot.botAvatar} alt={bot.botName} />
+                    <AvatarFallback>{bot.botName[0]}</AvatarFallback>
+                  </Avatar>
+                  <h3 className="font-semibold text-center mb-2 line-clamp-1">{bot.botName}</h3>
+                  <p className="text-sm text-gray-500 text-center mb-2">
+                    For: {bot.recipientName}
                   </p>
-                  <p>Uses: {bot.usageCount}</p>
-                  <p>Documents: {bot.initialDocuments?.length || 0}</p>
-                  <p>Total Size: {formatFileSize(calculateTotalSize(bot.initialDocuments))}</p>
-                </div>
-                <div className="flex gap-2 mt-auto">
-                  {showEditButton && onEdit && (
+                  <div className="text-sm text-gray-600 space-y-2 mb-4">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <p>Created: {formatCreatedAt(bot.createdAt)}</p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {new Date(bot.createdAt).toLocaleString()}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <p>Uses: {bot.usageCount}</p>
+                    <p>Documents: {bot.initialDocuments?.length || 0}</p>
+                    <p>Total Size: {formatFileSize(calculateTotalSize(bot.initialDocuments))}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-auto w-full"> {/* Add w-full and flex-wrap */}
+                    {showEditButton && onEdit && (
+                      <Button 
+                        variant="outline"
+                        onClick={() => onEdit(bot)}
+                        className="flex-1 min-w-[80px]" 
+                      >
+                        <Edit2 className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                    )}
+                    {onDuplicate && (
+                      <Button 
+                        variant="outline"
+                        onClick={() => onDuplicate(bot)}
+                        className="flex-1 min-w-[80px]" 
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy
+                      </Button>
+                    )}
                     <Button 
                       variant="outline"
-                      onClick={() => onEdit(bot)}
-                      className="flex-1"
+                      onClick={() => onView ? onView(bot) : window.open(bot.shareUrl, '_blank')}
+                      className="flex-1 min-w-[80px]" 
                     >
-                      <Edit2 className="h-4 w-4 mr-2" />
-                      Edit
+                      <Eye className="h-4 w-4 mr-2" />
+                      View
                     </Button>
-                  )}
-                  <Button 
-                    variant="outline"
-                    onClick={() => onView ? onView(bot) : window.open(bot.shareUrl, '_blank')}
-                    className="flex-1"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
-    </Carousel>
+                  </div>
+                </CardContent>
+              </Card>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="left-0" /> {/* Position explicitly */}
+        <CarouselNext className="right-0" /> {/* Position explicitly */}
+      </Carousel>
+    </div>
   );
 
   return (

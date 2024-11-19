@@ -495,6 +495,101 @@ const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
   }
 };
 
+const handleDuplicateBot = async (bot: UserBot) => {
+  if (!currentUser) return;
+  
+  try {
+      setIsCreating(true);
+      
+      // Create a new share config with the same settings but a new ID
+      const duplicateConfig = {
+          botId: bot.botId,
+          botName: `${bot.botName} (Copy)`,
+          botAvatar: bot.botAvatar,
+          senderName: currentUser.displayName || 'Anonymous',
+          recipientName: `${bot.recipientName} (Copy)`,
+          adminEmail: currentUser.email!,
+          initialMessage: bot.initialMessage,
+          initialInstructions: bot.initialInstructions,
+          initialDocuments: [] // Start with empty documents, they'll be copied next
+      };
+
+      // Create new share configuration
+      const newShareId = await FirebaseService.createShareConfig(currentUser.uid, duplicateConfig);
+
+      // If there are documents, copy them to the new share
+      if (bot.initialDocuments && bot.initialDocuments.length > 0) {
+          const copiedDocuments = await Promise.all(
+              bot.initialDocuments.map(async (doc): Promise<Document | undefined> => {
+                  if (!doc?.storagePath) return undefined;
+                  
+                  const newPath = doc.storagePath.replace(
+                      bot.shareId,
+                      newShareId
+                  );
+                  
+                  try {
+                      await StorageService.copyDocument(doc.storagePath, newPath);
+                      
+                      // Return a new Document object with the updated path
+                      return {
+                          storagePath: newPath,
+                          name: doc.name,
+                          type: doc.type,
+                          url: doc.url,
+                          contentType: doc.contentType,
+                          size: doc.size,
+                          uploadedAt: new Date()
+                      };
+                  } catch (error) {
+                      console.error('Error copying document:', error);
+                      return undefined;
+                  }
+              })
+          );
+
+          // Filter out any undefined results and ensure type safety
+          const validDocuments = copiedDocuments.filter((doc): doc is Document => {
+              return doc !== undefined && 
+                     typeof doc.storagePath === 'string' &&
+                     typeof doc.name === 'string' &&
+                     typeof doc.type === 'string' &&
+                     typeof doc.url === 'string';
+          });
+
+          if (validDocuments.length > 0) {
+              await FirebaseService.updateShareConfig(currentUser.uid, newShareId, {
+                  ...duplicateConfig,
+                  initialDocuments: validDocuments
+              });
+          }
+      }
+
+      // Refresh user's bots
+      const updatedBots = await FirebaseService.getUserBots(currentUser.uid);
+      setUserBots(updatedBots);
+
+      // Show success message
+      const newShareUrl = `${window.location.origin}/${currentUser.uid}/${newShareId}`;
+      setSuccessDialog({
+          isOpen: true,
+          title: 'Success',
+          message: 'Emissary duplicated successfully',
+          shareUrl: newShareUrl
+      });
+
+  } catch (error) {
+      console.error('Error duplicating bot:', error);
+      toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to duplicate emissary",
+          variant: "destructive"
+      });
+  } finally {
+      setIsCreating(false);
+  }
+};
+
 return (
   <div className="flex min-h-screen bg-background">
     <SidebarProvider>
@@ -753,6 +848,7 @@ return (
     <EmissaryList 
       bots={userBots} 
       onEdit={handleEditBot} 
+      onDuplicate={handleDuplicateBot} 
     />
                 </>
               )}
