@@ -31,7 +31,8 @@ export default function SharePage({ config }: SharePageProps) {
     initialInstructions,
     adminEmail,
     initialDocuments,
-    shareId  // Add this
+    tools,
+    shareId 
   } = useMemo(() => config, [config]);
 
   useEffect(() => {
@@ -71,7 +72,8 @@ export default function SharePage({ config }: SharePageProps) {
     recipientName,
     initialMessage,
     initialInstructions,
-    shareId  // Add this
+    tools,
+    shareId 
   }), [
     userState, 
     currentUser, 
@@ -85,7 +87,8 @@ export default function SharePage({ config }: SharePageProps) {
     recipientName,
     initialMessage,
     initialInstructions,
-    shareId  // Add this
+    tools,
+    shareId 
   ]);
 
   if (!accepted) {
