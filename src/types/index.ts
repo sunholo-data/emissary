@@ -88,6 +88,7 @@ export interface BaseConfigProps {
   adminEmail: string;
   initialMessage?: string;
   initialInstructions?: string;
+  tools?: string[]; 
 }
 
 // Full config type that includes shareId - used for the final/complete config

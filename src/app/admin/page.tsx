@@ -12,25 +12,6 @@ import { DocumentHandler } from '@/lib/document-handler';
 import { AppSidebar } from "@/components/app-sidebar";
 import LoginDialog from "@/components/LoginDialog";
 import EmissaryChoose from '@/components/EmissaryChoose';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ConfigProps, Document, UserState } from '@/types';
 import type { User } from 'firebase/auth';
 import FirebaseService, { BotConfig, UserBot } from '@/lib/firebase';
@@ -39,8 +20,8 @@ import { useToast } from "@/components/hooks/use-toast";
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { useAlertDialog } from "@/components/hooks/use-alert-dialog"
 import { SuccessDialog } from '@/components/SuccessDialog';
-import { formatFileSize, calculateTotalSize } from '@/lib/utils';
 import { EmissaryList } from '@/components/EmissaryList';
+import ToolSelector from '@/components/ToolSelector';
 
 export default function AdminPage() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -775,6 +756,16 @@ return (
                   }))}
                   rows={4}
                   className="w-full resize-y"
+                />
+              </div>
+              <div className="grid gap-2 overflow-hidden">
+                <Label>Tools & Features</Label>
+                <ToolSelector 
+                  selectedTools={config.tools || []}
+                  onChange={(tools) => setConfig(prev => ({
+                    ...prev,
+                    tools
+                  }))}
                 />
               </div>
               {(editingBot) ? (
