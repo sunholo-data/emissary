@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import { cn } from "@/lib/utils";
 
 export interface RechartsDataPoint {
   [key: string]: number | string;
@@ -301,16 +302,18 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
   };
 
   return (
-    <Card className={className} id={plotId}>
+    <Card className={cn("w-full", className)} id={plotId}>
       {parsedLayout.title && (
-        <CardHeader>
-          <CardTitle>{parsedLayout.title}</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">{parsedLayout.title}</CardTitle>
         </CardHeader>
       )}
-      <CardContent className="p-6">
-        <ChartContainer config={chartConfig} className="h-[350px]">
-          {renderChart()}
-        </ChartContainer>
+      <CardContent className="p-2 sm:p-6">
+        <div className="w-full aspect-[4/3] sm:aspect-[16/9] min-h-[200px]">
+          <ChartContainer config={chartConfig} className="w-full h-full">
+            {renderChart()}
+          </ChartContainer>
+        </div>
       </CardContent>
     </Card>
   );
