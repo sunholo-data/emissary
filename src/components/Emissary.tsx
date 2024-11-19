@@ -220,6 +220,7 @@ export default function Emissary({
           userMessage={activeChat === 'bot' ? userMessage : null}
           instructions={initialInstructions}
           documents={initialDocuments}
+          emissaryConfig={config}
         />
       </div>
 
