@@ -633,19 +633,28 @@ return (
 
             <main className="flex-1 p-6 overflow-auto">
           {!currentUser ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Login Access Required</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500 mb-4">
-                  You need to be logged in to create and manage emissary dispatches.
-                </p>
-                <Button onClick={() => setShowLoginDialog(true)}>
-                  Login to Continue
-                </Button>
-              </CardContent>
-            </Card>
+             <>
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Available Templates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <EmissaryChoose
+                    templates={availableTemplates}
+                    selectedTemplate={selectedTemplate}
+                    onSelect={() => setShowLoginDialog(true)} // Redirect to login instead of selecting
+                  />
+                  <div className="mt-6 text-center">
+                    <p className="text-gray-500 mb-4">
+                      Login to create and manage your own emissary dispatches
+                    </p>
+                    <Button onClick={() => setShowLoginDialog(true)}>
+                      Login to Continue
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+           </>
           ) : (
             <>
             <Card className="mb-6">

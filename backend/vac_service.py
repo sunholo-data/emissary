@@ -139,7 +139,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     }
     usage_metadata = {}
 
-    use_code_tool = 'code_execution' if "code_execution" in tools else None
+    use_code_tool = "code_execution" if "code_execution" in tools else None
     if not chunks:
       log.info(f"Tokens {total_tokens} < {FREE_TOKEN_LIMIT} tokens so calling model")
       response: GenerateContentResponse = model.generate_content(contents, 
