@@ -9,6 +9,8 @@ import { vacChat } from '@/utils/vacChat';
 import MessageContent from '@/components/MessageContent';
 import type { ChatInterfaceProps, ChatMessage } from '@/types';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { formatDistanceToNow } from 'date-fns';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function ChatInterface({
   botMessages,
@@ -36,6 +38,14 @@ export default function ChatInterface({
   const humanScrollAreaRef = useRef<HTMLDivElement>(null);
   const currentMessageRef = useRef<string>('');
   const lastUserMessageRef = useRef<string | null>(null);
+
+  const formatMessageTime = (date: Date | string | number) => {
+    const dateObj = new Date(date);
+    return {
+      relative: formatDistanceToNow(dateObj, { addSuffix: true }),
+      absolute: dateObj.toLocaleString()
+    };
+  };
 
   const scrollToBottom = (ref: React.RefObject<HTMLDivElement>) => {
     if (ref.current) {
@@ -230,6 +240,7 @@ const renderMessages = useCallback((messages: ChatMessage[], currentTab: 'bot' |
     };
 
     const { image, name, initials } = getAvatarAndName();
+    const timeInfo = formatMessageTime(message.timestamp || Date.now());
 
     return (
       <div 
@@ -252,9 +263,23 @@ const renderMessages = useCallback((messages: ChatMessage[], currentTab: 'bot' |
                 </AvatarFallback>
               )}
             </Avatar>
-            <span className="text-xs text-muted-foreground">
-              {name}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {name}
+              </span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <span className="text-xs text-muted-foreground/60">
+                      {timeInfo.relative}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {timeInfo.absolute}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
 
           {/* Message content */}
