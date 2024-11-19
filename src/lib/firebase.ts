@@ -52,6 +52,8 @@ interface MessageFilter {
     createdAt: number;
     updatedAt: number;
     isTemplate: boolean;
+    tools?: string[]; // Add tools array
+
   }
 
   // all bots a user has access to

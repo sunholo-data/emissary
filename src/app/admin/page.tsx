@@ -209,7 +209,8 @@ export default function AdminPage() {
             adminEmail: currentUser.email!,
             initialMessage: config.initialMessage,
             initialInstructions: config.initialInstructions,
-            initialDocuments: config.initialDocuments || []
+            initialDocuments: config.initialDocuments || [],
+            tools: config.tools || [],
         };
 
         if (editingBot === 'welcome-emissary') {
@@ -294,7 +295,8 @@ const handleCreateShare = async () => {
           adminEmail: currentUser.email!,
           initialDocuments: config.initialDocuments || [],
           initialMessage: config.initialMessage,
-          initialInstructions: config.initialInstructions
+          initialInstructions: config.initialInstructions,
+          tools: config.tools || [],
       };
 
       const shareId = await FirebaseService.createShareConfig(currentUser.uid, shareConfig);
@@ -492,6 +494,7 @@ const handleDuplicateBot = async (bot: UserBot) => {
           adminEmail: currentUser.email!,
           initialMessage: bot.initialMessage,
           initialInstructions: bot.initialInstructions,
+          tools: config.tools || [],
           initialDocuments: [] // Start with empty documents, they'll be copied next
       };
 
