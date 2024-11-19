@@ -99,7 +99,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
             contents.extend(doc_contents)
 
     contents.append({"role":"model", "parts":[{"text": first_response}]})
-    contents.append({"role":"user", "parts":[{"text": "Please continue without referring to this message, expanding on your first impression answer." }]})
+    contents.append({"role":"user", "parts":[{"text": "Please continue without referring to this message, expanding on your first impression answer.  Make sure you don't repeat what has just been said though.  You may find you have answered incorrectly now you have access to more information - thats ok, just point it out." }]})
 
     span.end(output = contents)
     log.info(f"{contents}")

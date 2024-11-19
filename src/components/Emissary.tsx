@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import ChatInterface from "@/components/ChatInterface";
 import LoginDialog from "@/components/LoginDialog";
-import type { Message, Document, Role, ChatMessage, EmissaryConfigState } from '@/types';
+import type { Document, Role, ChatMessage, EmissaryConfigState } from '@/types';
 import FirebaseService from '@/lib/firebase';
 import { useToast } from "@/components/hooks/use-toast";
 
@@ -41,8 +41,8 @@ export default function Emissary({
   showLoginDialog,
   setShowLoginDialog
 }: EmissaryProps) {
-  const [botMessages, setBotMessages] = useState<Message[]>([{ sender: 'bot', content: initialMessage }]);
-  const [humanMessages, setHumanMessages] = useState<Message[]>([]);
+  const [botMessages, setBotMessages] = useState<ChatMessage[]>([{ sender: 'bot', content: initialMessage }]);
+  const [humanMessages, setHumanMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [activeChat, setActiveChat] = useState<'bot' | 'human'>('bot');
   const [userMessage, setUserMessage] = useState<string | null>(null);
@@ -94,10 +94,10 @@ export default function Emissary({
           userEmail,
           isAdmin,
           (messages) => {
-            const formattedMessages: Message[] = messages.map(msg => ({
+            const formattedMessages: ChatMessage[] = messages.map(msg => ({
               sender: msg.sender,
               content: msg.content,
-              timestamp: new Date(msg.timestamp).toISOString(),
+              timestamp: msg.timestamp,
               userName: msg.userName,
               userEmail: msg.userEmail,
               photoURL: msg.photoURL  // Use the photoURL from the message itself
@@ -127,7 +127,7 @@ export default function Emissary({
           { 
             sender: 'user', 
             content: input,
-            timestamp: new Date().toISOString(),
+            timestamp: Date.now(),
             // For bot chat, we can still use current user's info if available
             userName: currentUser?.displayName || 'Anonymous',
             photoURL: currentUser?.photoURL || undefined
@@ -135,7 +135,7 @@ export default function Emissary({
           { 
             sender: 'bot', 
             content: '',
-            timestamp: new Date().toISOString(),
+            timestamp: Date.now(),
             userName: botName,
             photoURL: botAvatar
           }

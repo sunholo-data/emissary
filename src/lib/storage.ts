@@ -1,4 +1,4 @@
-import { getStorage, connectStorageEmulator, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { getStorage, connectStorageEmulator, ref, uploadBytes, getDownloadURL, deleteObject, getBlob } from 'firebase/storage';
 import { initFirebase } from '@/lib/firebase';
 import { getAuth } from 'firebase/auth';
 import type { Document } from '@/types';
@@ -25,6 +25,34 @@ export class StorageService {
     }
 
     return this.storage;
+  }
+
+  static async copyDocument(sourcePath: string, destinationPath: string): Promise<void> {
+    const storage = this.getStorageInstance();
+    
+    try {
+      const sourceRef = ref(storage, sourcePath);
+      const destinationRef = ref(storage, destinationPath);
+
+      // Get the metadata and content of the source file
+      const sourceData = await getBlob(sourceRef);
+      
+      // Upload to the new location with the same metadata
+      await uploadBytes(destinationRef, sourceData, {
+        customMetadata: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET',
+          'Cache-Control': 'public, max-age=3600'
+        }
+      });
+
+      console.log('Successfully copied file from', sourcePath, 'to', destinationPath);
+    } catch (error) {
+      console.error('Error copying document:', error);
+      throw error instanceof Error 
+        ? new Error(`Copy failed: ${error.message}`)
+        : new Error('Copy failed: Unknown error occurred');
+    }
   }
 
   static async uploadDocument(file: File, userId: string, shareId: string): Promise<Document> {
