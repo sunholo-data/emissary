@@ -7,7 +7,7 @@ import { Send, LogIn } from 'lucide-react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { vacChat } from '@/utils/vacChat';
 import MessageContent from '@/components/MessageContent';
-import type { Message, Document, ChatInterfaceProps, ChatMessage } from '@/types';
+import type { ChatInterfaceProps, ChatMessage } from '@/types';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function ChatInterface({
@@ -90,14 +90,14 @@ export default function ChatInterface({
   };
 
   // Memoize the chat history formatters
-const formatBotHistory = useCallback((messages: Message[]) => {
+const formatBotHistory = useCallback((messages: ChatMessage[]) => {
   return messages.map((msg) => ({
     name: msg.sender === 'user' ? 'Human' : 'AI',
     content: msg.content,
   }));
 }, []);
 
-const formatHumanHistory = useCallback((messages: Message[]) => {
+const formatHumanHistory = useCallback((messages: ChatMessage[]) => {
   return messages.map((msg) => ({
     name: msg.sender === 'admin' ? 'Admin' : 'Receiver',
     content: msg.content,
@@ -197,7 +197,7 @@ useEffect(() => {
   formatHumanHistory
 ]); 
 
-const renderMessages = useCallback((messages: Message[], currentTab: 'bot' | 'human') => {
+const renderMessages = useCallback((messages: ChatMessage[], currentTab: 'bot' | 'human') => {
   return messages.map((message, index) => {
     const isUserMessage = message.sender === 'user' || 
       (userState === 'admin' && message.sender === 'admin') ||
