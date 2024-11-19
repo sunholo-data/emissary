@@ -1,4 +1,8 @@
 // src/types/index.ts
+import { FileText, Image as ImageIcon, FileSpreadsheet, FileCode, Video, Music, File } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+
 export type UserState = 'not-logged-in' | 'receiver' | 'admin';
 
 export type Role = 'user' | 'bot' | 'other' | 'receiver' | 'admin';
@@ -15,28 +19,19 @@ export interface Document {
   uploadedAt?: Date; 
 }
 
-export type Message = {
-  sender: Role;
-  content: string;
-  timestamp?: string;
-  userName?: string;
-  userEmail?: string;
-  photoURL?: string;
-};
-
 export type VacChatParams = {
   userMessage: string;
   chatHistory: { name: string; content: string }[];
   humanChatHistory: { name: string; content: string }[];
-  onBotMessage: (message: Message) => void;
+  onBotMessage: (message: ChatMessage) => void;
   apiEndpoint: string;
   instructions?: string;
   documents?: Document[];
 };
 
 export type ChatInterfaceProps = {
-    botMessages: Message[];
-    humanMessages: Message[];
+    botMessages: ChatMessage[];
+    humanMessages: ChatMessage[];
     input: string;
     activeChat: 'bot' | 'human';
     botName: string;
@@ -48,7 +43,7 @@ export type ChatInterfaceProps = {
     onSendMessage: () => void;
     onLogin: () => void;
     setActiveChat: (value: 'bot' | 'human') => void;
-    setBotMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+    setBotMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
     apiEndpoint: string;
     userMessage: string | null;
     instructions?: string;
@@ -102,15 +97,14 @@ export interface ShareMetadata {
 }
 
 export interface ChatMessage {
-  sender: 'admin' | 'receiver';
+  sender: Role;
   content: string;
-  timestamp: number;
-  userName: string;
-  userEmail: string;
-  read: boolean;
+  timestamp?: number;
+  userName?: string;
+  userEmail?: string;
+  read?: boolean;
   photoURL?: string; 
   id?: string;  // Optional as it's added after fetching from Firestore
-
 }
 
 export interface ShareConfig {
@@ -126,8 +120,6 @@ export interface ShareConfig {
   metadata: ShareMetadata;
 }
 
-import { FileText, Image as ImageIcon, FileSpreadsheet, FileCode, Video, Music, File } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 
 export const IconMap = {
   FileText,
