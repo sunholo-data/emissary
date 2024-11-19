@@ -92,29 +92,9 @@ export default function EmissaryListPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <SidebarProvider>
-        <div className="flex w-full">
+        <div className="flex flex-col lg:flex-row w-full">
           {/* Desktop sidebar */}
-          <div className="hidden lg:block w-[280px] border-r bg-white">
-            <AppSidebar
-              botName=""
-              currentBotAvatar=""
-              senderName={currentUser?.displayName || ''}
-              recipientName=""
-              userState={userState}
-              currentUser={currentUser}
-              documents={[]}
-              onShowLogin={() => setShowLoginDialog(true)}
-              onLogout={handleLogout}
-              isAdminPage={false}
-              onFileUpload={() => {}}
-              onDeleteDocument={() => {}}
-              isUploading={false}
-              fileInputRef={fileInputRef}
-            />
-          </div>
-
-          {/* Mobile sidebar */}
-          <div className="lg:hidden">
+          <div className="hidden lg:block w-[280px] shrink-0 border-r bg-white">
             <AppSidebar
               botName=""
               currentBotAvatar=""
@@ -134,36 +114,38 @@ export default function EmissaryListPage() {
           </div>
 
           {/* Main content area */}
-          <div className="flex-1 flex flex-col bg-white">
-            <header className="flex h-14 items-center gap-4 border-b px-6 bg-white">
+          <div className="flex-1 flex flex-col min-w-0">
+            <header className="flex h-14 lg:h-16 items-center gap-4 border-b bg-white px-4 lg:px-6">
               <SidebarTrigger className="lg:hidden" />
               <div className="flex-1 flex items-center justify-between">
                 <h1 className="text-xl font-semibold">My Emissaries</h1>
               </div>
             </header>
             
-            <main className="flex-1 p-6 overflow-auto">
-              {!currentUser ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Login Access Required</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-500 mb-4">
-                      You need to be logged in to view your emissary dispatches.
-                    </p>
-                    <Button onClick={() => setShowLoginDialog(true)}>
-                      Login to Continue
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <EmissaryList 
-                  bots={userBots}
-                  showEditButton={false}
-                  onView={handleViewBot}
-                />
-              )}
+            <main className="flex-1 p-4 lg:p-6 overflow-auto">
+              <div className="container mx-auto max-w-7xl">
+                {!currentUser ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Login Access Required</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-500 mb-4">
+                        You need to be logged in to view your emissary dispatches.
+                      </p>
+                      <Button onClick={() => setShowLoginDialog(true)}>
+                        Login to Continue
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <EmissaryList 
+                    bots={userBots}
+                    showEditButton={false}
+                    onView={handleViewBot}
+                  />
+                )}
+              </div>
             </main>
           </div>
         </div>
