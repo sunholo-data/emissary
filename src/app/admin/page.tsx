@@ -187,6 +187,7 @@ export default function AdminPage() {
     setConfig({
       ...bot,
       botId: bot.botId,
+      tools: bot.tools || [], 
       // Ensure we have a valid Document array
       initialDocuments: (bot.initialDocuments || []).filter((doc): doc is Document => doc !== undefined)
     });

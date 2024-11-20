@@ -73,8 +73,6 @@ export async function vacChat(params: VacChatParams) {
             ...configParams // Other config params that don't conflict
         };
 
-        console.log('Request body:', requestBody); // Debug log
-
         const response = await fetch('/api/proxy', {
             method: 'POST',
             headers: { 

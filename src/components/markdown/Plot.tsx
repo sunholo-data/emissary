@@ -71,11 +71,35 @@ const COLORS = [
 export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
   const plotId = useMemo(() => id || `plot-${++plotCounter}`, [id]);
 
+  const cleanJsonString = (str: string): string => {
+    return str
+      // Remove extra newlines (keep one for array/object breaks)
+      .replace(/\n\s*\n/g, '\n')
+      // Remove whitespace at the start of lines
+      .replace(/^\s+/gm, '')
+      // Remove whitespace at the end of lines
+      .replace(/\s+$/gm, '')
+      // Normalize spaces between values
+      .replace(/\s+/g, ' ')
+      // Fix any broken array brackets
+      .replace(/\[\s*\n\s*\]/g, '[]')
+      // Remove any remaining unnecessary whitespace around brackets and braces
+      .replace(/\s*\[\s*/g, '[')
+      .replace(/\s*\]\s*/g, ']')
+      .replace(/\s*{\s*/g, '{')
+      .replace(/\s*}\s*/g, '}')
+      // Fix any broken commas
+      .replace(/,\s*\n\s*([}\]])/g, '$1')
+      // Ensure proper spacing after colons
+      .replace(/:\s+/g, ': ');
+  };
+
   const parsedData = useMemo(() => {
     try {
       if (!data) return null;
       if (typeof data === 'string') {
-        const parsed = JSON.parse(data) as RechartsPlotData;
+        const cleanData = cleanJsonString(data);
+        const parsed = JSON.parse(cleanData) as RechartsPlotData;
         if (!parsed.data || !Array.isArray(parsed.data) || !parsed.series || !Array.isArray(parsed.series)) {
           console.error('Invalid data structure:', parsed);
           return null;
@@ -93,7 +117,8 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
     try {
       if (!layout) return {};
       if (typeof layout === 'string') {
-        return JSON.parse(layout) as RechartsPlotLayout;
+        const cleanLayout = cleanJsonString(layout);
+        return JSON.parse(cleanLayout) as RechartsPlotLayout;
       }
       return layout;
     } catch (error) {
@@ -170,6 +195,7 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
                 dataKey={series.dataKey}
                 fill={`var(--color-${series.dataKey})`}
                 radius={4}
+                name={series.dataKey} // Add name for legend identification
               />
             ))}
           </BarChart>
@@ -189,6 +215,7 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
                 innerRadius={parsedLayout.pieConfig?.innerRadius || 0}
                 outerRadius={parsedLayout.pieConfig?.outerRadius || '80%'}
                 label
+                name={series.dataKey} // Add name for legend identification
               >
                 {parsedData.data.map((entry, index) => (
                   <Cell 
@@ -247,6 +274,7 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
                 key={`${plotId}-${series.dataKey}`}
                 data={parsedData.data}
                 fill={`var(--color-${series.dataKey})`}
+                name={series.dataKey} // Add name for legend identification
               />
             ))}
           </ScatterChart>
@@ -294,6 +322,7 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
                 dataKey={series.dataKey}
                 stroke={`var(--color-${series.dataKey})`}
                 dot={false}
+                name={series.dataKey} // Add name for legend identification
               />
             ))}
           </LineChart>
@@ -302,20 +331,20 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
   };
 
   return (
-    <Card className={cn("w-full", className)} id={plotId}>
-      {parsedLayout.title && (
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-base sm:text-lg">{parsedLayout.title}</CardTitle>
-        </CardHeader>
-      )}
-      <CardContent className="p-2 sm:p-6">
-        <div className="w-full aspect-[4/3] sm:aspect-[16/9] min-h-[200px]">
-          <ChartContainer config={chartConfig} className="w-full h-full">
-            {renderChart()}
-          </ChartContainer>
-        </div>
-      </CardContent>
-    </Card>
+<Card className={cn("w-full", className)} id={plotId}>
+  {parsedLayout.title && (
+    <CardHeader className="p-4 sm:p-6">
+      <CardTitle className="text-base sm:text-lg">{parsedLayout.title}</CardTitle>
+    </CardHeader>
+  )}
+  <CardContent className="p-2 sm:p-6">
+    <figure className="w-full aspect-[4/3] sm:aspect-[16/9] min-h-[200px]">
+      <ChartContainer config={chartConfig} className="w-full h-full">
+        {renderChart()}
+      </ChartContainer>
+    </figure>
+  </CardContent>
+</Card>
   );
 };
 
