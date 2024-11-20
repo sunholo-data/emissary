@@ -72,6 +72,7 @@ interface MessageFilter {
     shareUrl: string;
     usageCount: number;
     lastAccessedAt: Date;
+    tools?: string[];
   }
   
   export interface ShareMetadata {
@@ -448,6 +449,7 @@ static async updateWelcomeBot(config: any) {
         botId: shareConfig.botId,
         botName: shareConfig.botName || "Emissary Helper",
         initialDocuments: shareConfig.initialDocuments || [],
+        tools: shareConfig.tools || [], // Include tools from share data
         metadata: {
           createdAt: timestamp,
           updatedAt: timestamp,
@@ -589,6 +591,7 @@ static async updateWelcomeBot(config: any) {
             initialMessage: shareData.initialMessage || botConfig.defaultMessage,
             initialInstructions: shareData.initialInstructions || botConfig.defaultInstructions,
             initialDocuments: initialDocuments,
+            tools: shareData.tools || [], 
             createdAt: new Date(shareData.metadata.createdAt),
             updatedAt: new Date(shareData.metadata.updatedAt),
             shareUrl: `${window.location.origin}/${userId}/${shareData.shareId}`,

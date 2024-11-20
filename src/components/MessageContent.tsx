@@ -3,7 +3,6 @@ import React from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import rehypeHighlight from 'rehype-highlight';
 import { type ClassNameValue, twMerge } from 'tailwind-merge';
 import { type ComponentRegistry, markdownComponents } from './markdown';
 import { type Role } from '@/types';
@@ -54,7 +53,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({
     )}>
       <Markdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw, rehypeHighlight]}
+        rehypePlugins={[rehypeRaw]}
         components={components}
         skipHtml={false}
       >

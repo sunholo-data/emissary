@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import 'highlight.js/styles/stackoverflow-light.css';
 
 /*  keep the animation delays as they're not in Tailwind */
 .delay-200 {
@@ -125,5 +124,48 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+  }
+}
+
+@layer components {
+  /* Base prose container */
+  .prose {
+    @apply max-w-none w-full break-words;
+    word-wrap: break-word;
+  }
+
+  /* Code block styling */
+  .prose pre {
+    @apply p-4 my-4 rounded-lg bg-slate-100 dark:bg-slate-800;
+    @apply border border-slate-200 dark:border-slate-700;
+    @apply w-full max-w-full overflow-x-auto whitespace-pre-wrap break-words;
+  }
+
+  .prose code {
+    @apply px-1 py-0.5 rounded font-mono text-sm;
+    @apply w-full max-w-full overflow-x-auto whitespace-pre-wrap break-words;
+  }
+
+  .prose pre code {
+    @apply p-0 bg-transparent;
+    @apply text-slate-800 dark:text-slate-200;
+  }
+
+  /* Override problematic prose styles */
+  .prose :where(pre):not(:where([class~="not-prose"] *)) {
+    @apply p-4 my-4;
+    background-color: theme('colors.slate.100');
+    color: theme('colors.slate.800');
+  }
+
+  .dark .prose :where(pre):not(:where([class~="not-prose"] *)) {
+    background-color: theme('colors.slate.800');
+    color: theme('colors.slate.200');
+  }
+
+  /* Fix text color for user messages */
+  .text-primary-foreground .prose pre,
+  .text-primary-foreground .prose code {
+    @apply text-slate-800 dark:text-slate-200;
   }
 }
