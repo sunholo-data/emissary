@@ -5,6 +5,8 @@ import { Alert } from './Alert';
 import { PreviewComponent } from './Preview';
 import { Tooltip } from './Tooltip';
 import type { CustomComponent } from './types';
+import { Pre } from './Pre';
+
 
 // Re-export the components and types
 export * from './Highlight';
@@ -13,6 +15,7 @@ export * from './types';
 export * from './Alert';
 export * from './Preview';
 export * from './Tooltip';
+export * from './Pre';
 
 // Register all components with both cases supported
 // don't use <div> in components 
@@ -23,13 +26,15 @@ export const markdownComponents: Record<string, CustomComponent> = {
   alert: Alert,
   preview: PreviewComponent,
   tooltip: Tooltip,
-  
+  pre: Pre,
+
   // Optional: PascalCase versions if you want to support both casings
   Highlight: Highlight,
   Plot: Plot,
   Alert: Alert,
   Preview: PreviewComponent,
-  Tooltip: Tooltip
+  Tooltip: Tooltip,
+  Pre: Pre
 };
 
 export default markdownComponents;

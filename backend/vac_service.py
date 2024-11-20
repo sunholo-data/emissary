@@ -70,19 +70,6 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     if emissaryConfig is not None:
         tools = emissaryConfig.get('tools')
 
-    model_dict = create_model(config, instructions=instructions, tools=tools, trace_id=trace_id)
-    model = model_dict["model"]
-    system_prompt = model_dict["system_prompt"]
-    system_tokens = model_dict["system_tokens"]
-
-    span = langfuse.span(
-        trace_id=trace_id,
-        name="content",
-        input={"question": question, 
-               "chat_history": chat_history, 
-               "kwargs": kwargs, 
-               "system_prompt": system_prompt},
-    )
     contents = []
     
     if humanChatHistory:
@@ -104,6 +91,20 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     first_response = first_impression(contents, instructions=instructions, trace=trace)
     log.info(f"First response: {first_response}")
     callback.on_llm_new_token(token=first_response)
+
+    model_dict = create_model(config, instructions=instructions, tools=tools, trace_id=trace_id)
+    model = model_dict["model"]
+    system_prompt = model_dict["system_prompt"]
+    system_tokens = model_dict["system_tokens"]
+
+    span = langfuse.span(
+        trace_id=trace_id,
+        name="content",
+        input={"question": question, 
+               "chat_history": chat_history, 
+               "kwargs": kwargs, 
+               "system_prompt": system_prompt},
+    )
 
     if documents:
         doc_contents = asyncio.run(fetch_document_content(documents))

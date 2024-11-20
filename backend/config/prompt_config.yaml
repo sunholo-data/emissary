@@ -116,89 +116,83 @@ prompts:
       - Form field hints: `<tooltip text="Enter your full legal name">Name *</tooltip>`
       - Abbreviation explanations: `<tooltip text="National Aeronautics and Space Administration">NASA</tooltip>`
     plots: |
-      Use `<plot />` to display data visualizations. Provide structured data and layout as JSON.
-      The `<plot />` component should only be used to display up to 20 data points.
-      You can not pass data into the `<plot />` component - you have to specify the data inline.
-      You must not use the `<plot/>` component within code blocks via ``` or otherwise.
-      You can only use the chatTypes listed below e.g. line, bar, pie, scatter.
-      Data Structure:
-      Include data array with data points
-      Specify series configurations
-      Set chartType to choose visualization type: "line", "bar", "pie", or "scatter"
-      Basic Syntax:
+      # Plot Component Usage Guide
+
+      The `<plot />` component creates data visualizations with a strict data structure requirement. Follow these rules carefully to ensure your plots work correctly.
+
+      ## Core Requirements
+      - Maximum 20 data points
+      - Data must be inline JSON (no variables or external data)
+      - Tags must be lowercase: `<plot />` not `<Plot />`
+      - Never wrap in code blocks or backticks
+      - Valid chart types: "line", "bar", "pie", "scatter"
+      - Must use the propert data structure
+
+      ## Required Data Structure
+      Every plot requires this exact structure:
+      ```json
+      {
+        "data": [
+          // Array of objects with x/y properties
+          {"x": value, "y": value},
+          {"x": value, "y": value}
+        ],
+        "series": [
+          // At least one series configuration
+          {"dataKey": "y"}
+        ],
+        "chartType": "line" // Required: "line", "bar", "pie", or "scatter"
+      }
+      Correct Examples
+
+      Basic Line Chart:
       <plot 
-        data='{"data":[...],"series":[...],"chartType":"line"}' 
-        layout='{"title":"...","xAxisLabel":"...","yAxisLabel":"..."}'
+      data='{"data":[{"x":1,"y":10},{"x":2,"y":20}],"series":[{"dataKey":"y"}],"chartType":"line"}'
+      layout='{"title":"Line Chart","xAxisLabel":"X","yAxisLabel":"Y"}'
       />
-      Chart Types and Examples:
-      Line Chart (default):
+      Basic Bar Chart:
       <plot 
-        data='{
-          "data": [{"x":1,"y":10},{"x":2,"y":20}],
-          "series": [{"dataKey":"y","color":"#FF5733"}],
-          "chartType":"line"
-        }' 
-        layout='{
-          "title":"Sample Line Chart",
-          "xAxisLabel":"Time",
-          "yAxisLabel":"Value"
-        }'
+      data='{"data":[{"x":"A","y":10},{"x":"B","y":20}],"series":[{"dataKey":"y"}],"chartType":"bar"}'
+      layout='{"title":"Bar Chart","xAxisLabel":"Category","yAxisLabel":"Value"}'
       />
-      Bar Chart:
+      Basic Scatter Plot:
       <plot 
-        data='{
-          "data": [{"x":"A","y":10},{"x":"B","y":20}],
-          "series": [{"dataKey":"y","color":"#4CAF50"}],
-          "chartType":"bar"
-        }' 
-        layout='{
-          "title":"Sample Bar Chart",
-          "xAxisLabel":"Category",
-          "yAxisLabel":"Value"
-        }'
+      data='{"data":[{"x":1,"y":10},{"x":2,"y":20}],"series":[{"dataKey":"y"}],"chartType":"scatter"}'
+      layout='{"title":"Scatter Plot","xAxisLabel":"X","yAxisLabel":"Y"}'
       />
-      Pie Chart:
+      Basic Pie Chart:
       <plot 
-        data='{
-          "data": [{"x":"A","y":30},{"x":"B","y":70}],
-          "series": [{"dataKey":"y"}],
-          "chartType":"pie"
-        }' 
-        layout='{
-          "title":"Sample Pie Chart",
-          "showLegend":true,
-          "pieConfig": {
-            "innerRadius":0,
-            "outerRadius":"80%"
-          }
-        }'
+      data='{"data":[{"x":"A","y":30},{"x":"B","y":70}],"series":[{"dataKey":"y"}],"chartType":"pie"}'
+      layout='{"title":"Pie Chart","showLegend":true}'
       />
-      Scatter Plot:
-      <plot 
-        data='{
-          "data": [{"x":10,"y":20},{"x":15,"y":25}],
-          "series": [{"dataKey":"y","color":"#9C27B0"}],
-          "chartType":"scatter"
-        }' 
-        layout='{
-          "title":"Sample Scatter Plot",
-          "xAxisLabel":"X Value",
-          "yAxisLabel":"Y Value"
-        }'
-      />
-      Important Notes:
-      Use tags in lowercase
-      NEVER use backticks ``` to wrap the plot tags
-      All data must be valid JSON
-      Colors can be specified using hex codes (e.g., "#FF5733")
-      Multiple series can be plotted by adding more dataKey entries in the series array
-      Layout options include:
-      title: Chart title
-      showLegend: true/false
-      showGrid: true/false
-      xAxisLabel/yAxisLabel: Axis labels
-      margin: {top, right, bottom, left}
-      pieConfig: Special settings for pie charts
+
+      Common Mistakes to Avoid
+      ❌ DON'T use arrays for x and y values:
+      jsonCopy{"x": [1,2,3], "y": [4,5,6]}  // Wrong!
+      ✅ DO use array of objects:
+      jsonCopy{"data": [{"x":1,"y":4}, {"x":2,"y":5}, {"x":3,"y":6}]}  // Correct!
+      ❌ DON'T forget the series configuration:
+      jsonCopy{"data": [...]}  // Wrong!
+      ✅ DO include series:
+      jsonCopy{"data": [...], "series": [{"dataKey":"y"}]}  // Correct!
+      Layout Options
+      jsonCopy{
+        "title": "Chart Title",
+        "showLegend": true/false,
+        "showGrid": true/false,
+        "xAxisLabel": "X Axis",
+        "yAxisLabel": "Y Axis",
+        "margin": {
+          "top": 20,
+          "right": 30,
+          "bottom": 30,
+          "left": 20
+        },
+        "pieConfig": {  // For pie charts only
+          "innerRadius": 0,
+          "outerRadius": "80%"
+        }
+      }
     alerts: |
       Use <alert> to display important alerts with context-appropriate colors and borders. The type determines the color:
       •	Types:
@@ -208,7 +202,7 @@ prompts:
       •	success (green) - For success messages.
       •	Syntax: <alert type="warning">This is a warning message.</alert>
       •	Example: <alert type="error">An error occurred during processing.</alert>
-      The <alert> tag does not support markdown within it.
+      The <alert> tag does not support markdown within it. It creates a new line for its contents before and after.
     highlights: |
       Use <highlight> to emphasize text with a highlighted background. You can specify a color if desired.
       •	Syntax: <highlight color="#hexcolor">Text to highlight</highlight>
