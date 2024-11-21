@@ -4,6 +4,7 @@ from sunholo.langfuse.prompts import load_prompt_from_yaml
 #from sunholo.invoke import AsyncTaskRunner
 import asyncio
 import os
+import re
 
 from sunholo.genai import init_genai, genai_safety, construct_file_content
 import google.generativeai as genai
@@ -112,7 +113,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
             contents.extend(doc_contents)
 
     contents.append({"role":"model", "parts":[{"text": first_response}]})
-    contents.append({"role":"user", "parts":[{"text": "Please continue without referring to this message, expanding on your answer.  Make sure you don't repeat what has just been said." }]})
+    contents.append({"role":"user", "parts":[{"text": f"Please continue expanding on your answer.  Make sure you don't repeat what has just been said. Make sure you obey these instructions: {system_prompt}" }]})
 
     span.end(output = contents)
     log.info(f"{contents}")
@@ -164,7 +165,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
                     parsed_chunk = chunk.text
                     # to stop parsing errors when exeuting code
                     if '```' in chunk.text:
-                        parsed_chunk = chunk.text.replace('```', '```\n')
+                        parsed_chunk = re.sub(r'```(?!\n)', '```\n', chunk.text)
                     callback.on_llm_new_token(token=parsed_chunk)
                     chunks += parsed_chunk
                 except ValueError as err:
@@ -242,7 +243,6 @@ def create_model(config, instructions=None, tools=None, trace_id=None):
 
     prompts["system"] = load_prompt_from_yaml("system", prefix="emissary") or ""
 
-    log.info(f"{prompts=}")
     system_prompt = " ".join([instructions or ""] + [p for p in prompts.values() if p is not None])
 
     log.info(f"{system_prompt=}")
