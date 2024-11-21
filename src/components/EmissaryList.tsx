@@ -157,8 +157,8 @@ export const EmissaryList = ({
   );
 
   const renderCarousel = () => (
-    <div className="relative w-full max-w-5xl mx-auto px-12"> {/* Add padding for carousel buttons */}
-      <Carousel opts={{loop: true}} className="w-full">
+    <div className="w-full space-y-4">
+      <Carousel opts={{loop: true}} className="w-full max-w-xl mx-auto">
         <CarouselContent className="-ml-1">
           {bots.map((bot) => (
             <CarouselItem key={bot.shareId} className="pl-1 basis-full sm:basis-1/2 lg:basis-1/3">
@@ -187,7 +187,7 @@ export const EmissaryList = ({
                     <p>Documents: {bot.initialDocuments?.length || 0}</p>
                     <p>Total Size: {formatFileSize(calculateTotalSize(bot.initialDocuments))}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-auto w-full"> {/* Add w-full and flex-wrap */}
+                  <div className="flex flex-wrap gap-2 mt-auto w-full">
                     {showEditButton && onEdit && (
                       <Button 
                         variant="outline"
@@ -222,8 +222,8 @@ export const EmissaryList = ({
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="left-0" /> {/* Position explicitly */}
-        <CarouselNext className="right-0" /> {/* Position explicitly */}
+        <CarouselPrevious />
+        <CarouselNext />
       </Carousel>
     </div>
   );
