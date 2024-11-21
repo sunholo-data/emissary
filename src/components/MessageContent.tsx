@@ -3,8 +3,8 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { type ClassNameValue, twMerge } from 'tailwind-merge';
-import { 
-  type ComponentRegistry, 
+import {
+  type ComponentRegistry,
   markdownComponents,
   Plot,
   Alert,
@@ -12,7 +12,6 @@ import {
   Pre
 } from './markdown';
 import { type Role } from '@/types';
-import { ErrorBoundary } from './ErrorBoundary';
 
 interface MessageContentProps {
   content: string;
@@ -22,6 +21,40 @@ interface MessageContentProps {
   additionalComponents?: ComponentRegistry;
 }
 
+// Individual chunk error boundary component
+const ChunkErrorBoundary: React.FC<{
+  children: React.ReactNode;
+  index: number;
+}> = ({ children, index }) => {
+  const [hasError, setHasError] = React.useState(false);
+  const [error, setError] = React.useState<Error | null>(null);
+
+  React.useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      const target = event.target as Node;
+      const boundary = document.getElementById(`chunk-boundary-${index}`);
+      if (boundary?.contains(target)) {
+        event.preventDefault();
+        setHasError(true);
+        setError(event.error);
+      }
+    };
+
+    window.addEventListener('error', handleError, true);
+    return () => window.removeEventListener('error', handleError, true);
+  }, [index]);
+
+  if (hasError) {
+    return (
+      <div className="p-2 my-2 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded">
+        Error in chunk {index + 1}: {error?.message || 'Failed to render content'}
+      </div>
+    );
+  }
+
+  return <div id={`chunk-boundary-${index}`}>{children}</div>;
+};
+
 // Map of components that should be treated as block elements
 const BLOCK_COMPONENTS = new Set([
   Plot,
@@ -30,20 +63,111 @@ const BLOCK_COMPONENTS = new Set([
   Pre
 ]);
 
-// Wrap component with both error boundary and block handling if needed
+interface Chunk {
+  content: string;
+  type: 'text' | 'code' | 'plot' | 'alert';
+}
+
+// Improved content splitting function with duplicate prevention
+const splitContent = (content: string): Chunk[] => {
+  const chunks: Chunk[] = [];
+  let currentText = '';
+  let isInCodeBlock = false;
+  let codeBlockContent = '';
+  let codeBlockLanguage = '';
+  
+  const lines = content.split('\n');
+  
+  const flushText = () => {
+    if (currentText.trim()) {
+      chunks.push({
+        content: currentText.trim(),
+        type: 'text'
+      });
+      currentText = '';
+    }
+  };
+
+  const flushCodeBlock = () => {
+    if (codeBlockContent.trim()) {
+      chunks.push({
+        content: '```' + codeBlockLanguage + '\n' + codeBlockContent.trim() + '\n```',
+        type: 'code'
+      });
+      codeBlockContent = '';
+      codeBlockLanguage = '';
+    }
+  };
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Handle code blocks
+    if (line.startsWith('```')) {
+      if (!isInCodeBlock) {
+        flushText();
+        isInCodeBlock = true;
+        codeBlockLanguage = line.slice(3).trim();
+      } else {
+        isInCodeBlock = false;
+        flushCodeBlock();
+        continue;
+      }
+    }
+    else if (isInCodeBlock) {
+      codeBlockContent += line + '\n';
+      continue;
+    }
+    
+    // Handle plot components
+    else if (line.includes('<plot')) {
+      flushText();
+      let plotContent = line;
+      while (i + 1 < lines.length && !lines[i].includes('/>')) {
+        i++;
+        plotContent += '\n' + lines[i];
+      }
+      chunks.push({
+        content: plotContent.trim(),
+        type: 'plot'
+      });
+    }
+    
+    // Handle alert components
+    else if (line.includes('<alert')) {
+      flushText();
+      let alertContent = line;
+      while (i + 1 < lines.length && !lines[i].includes('</alert>')) {
+        i++;
+        alertContent += '\n' + lines[i];
+      }
+      chunks.push({
+        content: alertContent.trim(),
+        type: 'alert'
+      });
+    }
+    
+    // Regular text
+    else {
+      currentText += line + '\n';
+    }
+  }
+  
+  // Flush any remaining content
+  flushText();
+  if (isInCodeBlock) {
+    flushCodeBlock();
+  }
+  
+  return chunks;
+};
+
+// Wrap component with error handling
 const wrapComponent = (Component: React.ComponentType<any>) => {
   const WrappedComponent = (props: any) => {
     const isBlock = BLOCK_COMPONENTS.has(Component);
     const content = (
-      <ErrorBoundary
-        fallback={
-          <div className="p-2 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded">
-            Failed to render {Component.displayName || Component.name || 'component'}
-          </div>
-        }
-      >
-        <Component {...props} />
-      </ErrorBoundary>
+      <Component {...props} />
     );
 
     if (isBlock) {
@@ -57,7 +181,6 @@ const wrapComponent = (Component: React.ComponentType<any>) => {
     return content;
   };
 
-  // Preserve the display name for debugging
   WrappedComponent.displayName = `WrappedComponent(${Component.displayName || Component.name || 'Component'})`;
   return WrappedComponent;
 };
@@ -69,7 +192,7 @@ const wrapComponents = (components: ComponentRegistry): ComponentRegistry => {
   }, {} as ComponentRegistry);
 };
 
-// Memoize the role components to prevent unnecessary re-wrapping
+// Memoize the role components
 const roleComponents = {
   user: wrapComponents(markdownComponents),
   bot: wrapComponents(markdownComponents),
@@ -85,6 +208,9 @@ export const MessageContent: React.FC<MessageContentProps> = ({
   className,
   additionalComponents = {}
 }) => {
+  // Split content into chunks
+  const contentChunks = React.useMemo(() => splitContent(content), [content]);
+
   // Memoize the combined components
   const components = React.useMemo(() => ({
     ...roleComponents[role],
@@ -92,28 +218,26 @@ export const MessageContent: React.FC<MessageContentProps> = ({
   }), [role, additionalComponents]);
 
   return (
-    <ErrorBoundary
-      fallback={
-        <div className="p-4 text-red-500 bg-red-50 dark:bg-red-900/20 rounded">
-          Failed to render message content
-        </div>
-      }
-    >
-      <div className={twMerge(
+    <div
+      className={twMerge(
         'prose prose-sm max-w-none dark:prose-invert',
         isUser ? 'text-primary-foreground' : '',
         className
-      )}>
-        <Markdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw]}
-          components={components}
-          skipHtml={false}
-        >
-          {content}
-        </Markdown>
-      </div>
-    </ErrorBoundary>
+      )}
+    >
+      {contentChunks.map((chunk, index) => (
+        <ChunkErrorBoundary key={`chunk-${index}`} index={index}>
+          <Markdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
+            components={components}
+            skipHtml={false}
+          >
+            {chunk.content}
+          </Markdown>
+        </ChunkErrorBoundary>
+      ))}
+    </div>
   );
 };
 
