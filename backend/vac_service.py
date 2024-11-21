@@ -4,6 +4,7 @@ from sunholo.langfuse.prompts import load_prompt_from_yaml
 #from sunholo.invoke import AsyncTaskRunner
 import asyncio
 import os
+import re
 
 from sunholo.genai import init_genai, genai_safety, construct_file_content
 import google.generativeai as genai
@@ -164,7 +165,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
                     parsed_chunk = chunk.text
                     # to stop parsing errors when exeuting code
                     if '```' in chunk.text:
-                        parsed_chunk = chunk.text.replace('```', '```\n')
+                        parsed_chunk = re.sub(r'```(?!\n)', '```\n', chunk.text)
                     callback.on_llm_new_token(token=parsed_chunk)
                     chunks += parsed_chunk
                 except ValueError as err:
