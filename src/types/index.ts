@@ -166,6 +166,7 @@ export interface UserBot {
     shareUrl?: string;
     usageCount?: number;
     lastAccessedAt?: Date;
+    tools?: string[];
   }
 
 export interface EmissaryListProps {
