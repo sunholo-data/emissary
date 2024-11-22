@@ -70,6 +70,7 @@ const COLORS = [
 ];
 
 export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
+
   const plotId = useMemo(() => id || `plot-${++plotCounter}`, [id]);
 
   const cleanJsonString = (str: string): string => {
@@ -353,7 +354,7 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
         </CardHeader>
       )}
       <CardContent className="p-2 sm:p-4">
-        <div className="w-full h-48 sm:h-64">
+        <div className="h-[140px]">
           <ChartContainer config={chartConfig} className="w-full h-full">
             {renderChart()}
           </ChartContainer>
