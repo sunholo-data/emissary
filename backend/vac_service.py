@@ -91,7 +91,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
 
     first_response = first_impression(contents, instructions=instructions, trace=trace)
     log.info(f"First response: {first_response}")
-    callback.on_llm_new_token(token=first_response)
+    callback.on_llm_new_token(token=f"{first_response}\n\n")
 
     model_dict = create_model(config, instructions=instructions, tools=tools, trace_id=trace_id)
     model = model_dict["model"]

@@ -11,7 +11,7 @@ import MessageContent from '@/components/MessageContent';
 import type { ChatInterfaceProps, ChatMessage } from '@/types';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { formatDistanceToNow } from 'date-fns';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import RelativeTime from '@/components/RelativeTime'
 
 export default function ChatInterface({
   botMessages,
@@ -171,7 +171,9 @@ useEffect(() => {
               if (newMessages.length > 0) {
                   newMessages[newMessages.length - 1] = {
                       sender: 'bot',
-                      content: currentMessageRef.current
+                      content: currentMessageRef.current,
+                      timestamp: Date.now() // Add timestamp when creating bot message
+
                   };
               }
               return newMessages;
@@ -270,18 +272,7 @@ const renderMessages = useCallback((messages: ChatMessage[], currentTab: 'bot' |
               <span className="text-xs text-muted-foreground">
                 {name}
               </span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <span className="text-xs text-muted-foreground/60">
-                      {timeInfo.relative}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {timeInfo.absolute}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <RelativeTime timestamp={message.timestamp || Date.now()} />
             </div>
           </div>
 

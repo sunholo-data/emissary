@@ -25,6 +25,12 @@ const nextConfig = {
             pathname: '/**',
           },
           {
+            protocol: 'https',
+            hostname: 'storage.googleapis.com',
+            port: '',
+            pathname: '/**',
+          },
+          {
             protocol: 'http',
             hostname: '127.0.0.1',
             port: '9199',  // Specify port for local Firebase emulator
@@ -52,8 +58,8 @@ const nextConfig = {
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com https://*.firebase.com https://*.googleapis.com",
             "style-src 'self' 'unsafe-inline'",
-            "media-src 'self' https://*.googleapis.com https://firebasestorage.googleapis.com", 
-            "img-src 'self' data: https:",
+            "media-src 'self' https://*.googleapis.com https://firebasestorage.googleapis.com https://storage.googleapis.com", 
+            "img-src 'self' data: https:", 
             // add your firebase auth domain here e.g. https://em.sunholo.com
             "frame-src 'self' https://*.firebaseapp.com https://*.firebase.com https://*.googleapis.com https://*.sunholo.com",  
             "connect-src 'self' https://*.firebase.com https://*.firebaseapp.com https://*.googleapis.com",
