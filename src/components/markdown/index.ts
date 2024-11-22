@@ -6,6 +6,7 @@ import { PreviewComponent } from './Preview';
 import { Tooltip } from './Tooltip';
 import type { CustomComponent } from './types';
 import { Pre } from './Pre';
+import { GoogleSearch } from './GoogleSearch';
 
 
 // Re-export the components and types
@@ -16,6 +17,7 @@ export * from './Alert';
 export * from './Preview';
 export * from './Tooltip';
 export * from './Pre';
+export * from './GoogleSearch';
 
 // Register all components with both cases supported
 // don't use <div> in components 
@@ -27,6 +29,7 @@ export const markdownComponents: Record<string, CustomComponent> = {
   preview: PreviewComponent,
   tooltip: Tooltip,
   pre: Pre,
+  googlesearch: GoogleSearch,
 
   // Optional: PascalCase versions if you want to support both casings
   Highlight: Highlight,
