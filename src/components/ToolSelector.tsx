@@ -122,6 +122,14 @@ const AVAILABLE_TOOLS: Tool[] = [
       }
   },
   {
+    id: 'network',
+    name: 'Network Graphs',
+    description: 'Visualize relationships and workflows',
+    category: 'Output',
+    icon: Network, 
+    demo: NetworkGraphDemo, 
+  },
+  {
     id: 'alerts',
     name: 'Alert Messages',
     description: 'Display important notifications',
@@ -277,14 +285,6 @@ const AVAILABLE_TOOLS: Tool[] = [
       </div>
     )
 },
-{
-    id: 'network',
-    name: 'Network Graphs',
-    description: 'Visualize relationships and workflows',
-    category: 'Output',
-    icon: Network, 
-    demo: NetworkGraphDemo, 
-  },
  {
     id: 'advanced_models',
     name: 'Advanced Models',
