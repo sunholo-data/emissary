@@ -187,31 +187,33 @@ export const EmissaryList = ({
                     <p>Documents: {bot.initialDocuments?.length || 0}</p>
                     <p>Total Size: {formatFileSize(calculateTotalSize(bot.initialDocuments))}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-auto w-full">
-                    {showEditButton && onEdit && (
-                      <Button 
-                        variant="outline"
-                        onClick={() => onEdit(bot)}
-                        className="flex-1 min-w-[80px]" 
-                      >
-                        <Edit2 className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                    )}
-                    {onDuplicate && (
-                      <Button 
-                        variant="outline"
-                        onClick={() => onDuplicate(bot)}
-                        className="flex-1 min-w-[80px]" 
-                      >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy
-                      </Button>
-                    )}
+                  <div className="flex flex-col gap-2 mt-auto w-full">
+                    <div className="grid grid-cols-2 gap-2">
+                      {showEditButton && onEdit && (
+                        <Button 
+                          variant="outline"
+                          onClick={() => onEdit(bot)}
+                          className="w-full" 
+                        >
+                          <Edit2 className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                      )}
+                      {onDuplicate && (
+                        <Button 
+                          variant="outline"
+                          onClick={() => onDuplicate(bot)}
+                          className="w-full" 
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy
+                        </Button>
+                      )}
+                    </div>
                     <Button 
                       variant="outline"
                       onClick={() => onView ? onView(bot) : window.open(bot.shareUrl, '_blank')}
-                      className="flex-1 min-w-[80px]" 
+                      className="w-full" 
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       View

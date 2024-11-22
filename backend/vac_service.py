@@ -257,4 +257,5 @@ def create_model(config, instructions=None, tools=None, trace_id=None):
 
     return {"model": genai_model, 
             "system_tokens": system_tokens, 
+            "prompts": prompts,
             "system_prompt": system_prompt}
