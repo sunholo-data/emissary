@@ -36,7 +36,8 @@ const ALLOWED_IMAGE_DOMAINS = [
   'localhost',
   'sunholo.com',
   'googleapis.com',
-  'firebasestorage.googleapis.com'
+  'firebasestorage.googleapis.com',
+  'storage.googleapis.com'
   // Add other allowed domains here
 ];
 
