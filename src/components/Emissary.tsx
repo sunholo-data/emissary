@@ -43,7 +43,13 @@ export default function Emissary({
   setShowLoginDialog,
   tools = []
 }: EmissaryProps) {
-  const [botMessages, setBotMessages] = useState<ChatMessage[]>([{ sender: 'bot', content: initialMessage }]);
+  const [botMessages, setBotMessages] = useState<ChatMessage[]>([{ 
+    sender: 'bot', 
+    content: initialMessage,
+    timestamp: Date.now(),  // Add timestamp to initial message
+    userName: botName,
+    photoURL: botAvatar
+  }]);
   const [humanMessages, setHumanMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [activeChat, setActiveChat] = useState<'bot' | 'human'>('bot');
