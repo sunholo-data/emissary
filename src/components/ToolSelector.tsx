@@ -105,18 +105,18 @@ const AVAILABLE_TOOLS: Tool[] = [
             { x: 'C', y: 8 }
           ],
           series: [{ dataKey: 'y' }],
-          chartType: 'pie'
+          chartType: 'bar'
         };
         const sampleLayout: RechartsPlotLayout = {
-          title: 'Sample Chart',
-          showGrid: true,
-          margin: { top: 0, right: 0, bottom: 0, left: 0 }, // Smaller margins
-        };
+            showGrid: true,
+            margin: { top: 10, right: 10, bottom: 20, left: 30 }, // Smaller margins
+            showLegend: false // Disable legend to save space
+          };      
         return (
             <Plot 
-              data={sampleData} 
+              data={sampleData}
               layout={sampleLayout}
-              className="h-full" // Force height
+              className="h-full max-h-[160px]"
             />
         );
       }
