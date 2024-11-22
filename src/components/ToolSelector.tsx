@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Check, AlertCircle, Search, Code, LineChart, BrainCircuit, ChevronDown, ChevronUp } from 'lucide-react';
-import { Cpu, Terminal, Database, History, Globe } from 'lucide-react';
+import { Cpu, Terminal, Database, History, Globe, Network } from 'lucide-react';
 import { FileIcon, FileText, Image as ImageIcon, Music, Video, File } from 'lucide-react';
 import { Alert } from '@/components/markdown/Alert';
 import { Highlight } from '@/components/markdown/Highlight';
@@ -14,6 +14,8 @@ import type { CustomComponent } from '@/components/markdown/types';
 import type { RechartsPlotData, RechartsPlotLayout } from '@/components/markdown/Plot';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import CodeExecutionDemo from '@/components/demos/CodeExecutionDemo';
+import NetworkGraphDemo from '@/components/demos/NetworkGraphDemo';
 
 interface Tool {
   id: string;
@@ -103,21 +105,29 @@ const AVAILABLE_TOOLS: Tool[] = [
             { x: 'C', y: 8 }
           ],
           series: [{ dataKey: 'y' }],
-          chartType: 'pie'
+          chartType: 'bar'
         };
         const sampleLayout: RechartsPlotLayout = {
-          title: 'Sample Chart',
-          showGrid: true,
-          margin: { top: 0, right: 0, bottom: 0, left: 0 }, // Smaller margins
-        };
+            showGrid: true,
+            margin: { top: 10, right: 10, bottom: 20, left: 30 }, // Smaller margins
+            showLegend: false // Disable legend to save space
+          };      
         return (
             <Plot 
-              data={sampleData} 
+              data={sampleData}
               layout={sampleLayout}
-              className="h-full" // Force height
+              className="h-full max-h-[160px]"
             />
         );
       }
+  },
+  {
+    id: 'network',
+    name: 'Network Graphs',
+    description: 'Visualize relationships and workflows',
+    category: 'Output',
+    icon: Network, 
+    demo: NetworkGraphDemo, 
   },
   {
     id: 'alerts',
@@ -156,33 +166,8 @@ const AVAILABLE_TOOLS: Tool[] = [
     category: 'Integration', 
     icon: Cpu,
     isPremium: false,
-    demo: () => (
-      <div className="space-y-4">
-        <div className="bg-black rounded-lg p-4 font-mono text-xs text-white">
-          <div className="flex items-center gap-2 mb-2 text-gray-400">
-            <Terminal className="h-4 w-4"/>
-            <span>Python Code Execution</span>
-          </div>
-          <div className="text-green-400">&gt;&gt;&gt; import pandas as pd</div>
-          <div className="text-white">&gt;&gt;&gt; df = pd.read_csv('data.csv')</div>
-          <div className="text-white">&gt;&gt;&gt; df.describe()</div>
-          <div className="text-green-400 whitespace-pre">
- count  1000.0  1000.0
- mean    15.5    82.4
- std      5.2    12.3
- min      0.0    45.6
- max     32.1   120.8
-          </div>
-        </div>
-        <Alert>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/>
-            <span>Code execution environment ready</span>
-          </div>
-        </Alert>
-      </div>
-    )
- },
+    demo: CodeExecutionDemo
+  },  
   {
     id: 'search',
     name: 'Web Search',
@@ -300,7 +285,6 @@ const AVAILABLE_TOOLS: Tool[] = [
       </div>
     )
 },
-
  {
     id: 'advanced_models',
     name: 'Advanced Models',
