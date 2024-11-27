@@ -21,6 +21,25 @@ interface MessageContentProps {
   additionalComponents?: ComponentRegistry;
 }
 
+// Role-based styling configurations using CSS variables
+const roleStyles: Record<Role, { container: string }> = {
+  bot: {
+    container: 'bg-[var(--chat-bot-bg)] border-[var(--chat-bot)]'
+  },
+  admin: {
+    container: 'bg-[var(--chat-admin-bg)] border-[var(--chat-admin)]'
+  },
+  receiver: {
+    container: 'bg-[var(--chat-receiver-bg)] border-[var(--chat-receiver)]'
+  },
+  user: {
+    container: 'bg-primary text-primary-foreground'
+  },
+  other: {
+    container: 'bg-muted text-muted-foreground'
+  }
+};
+
 // Individual chunk error boundary component
 const ChunkErrorBoundary: React.FC<{
   children: React.ReactNode;
@@ -217,11 +236,16 @@ export const MessageContent: React.FC<MessageContentProps> = ({
     ...wrapComponents(additionalComponents),
   }), [role, additionalComponents]);
 
+  // Get styles for current role
+  const styles = roleStyles[role];
+
   return (
     <div
       className={twMerge(
         'prose prose-sm max-w-none dark:prose-invert',
-        isUser ? 'text-primary-foreground' : '',
+        'rounded-lg border p-3',
+        styles.container,
+        !isUser && 'dark:prose-invert',
         className
       )}
     >
@@ -240,5 +264,6 @@ export const MessageContent: React.FC<MessageContentProps> = ({
     </div>
   );
 };
+
 
 export default MessageContent;

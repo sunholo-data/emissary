@@ -1,6 +1,5 @@
 // src/types/index.ts
 import { FileText, Image as ImageIcon, FileSpreadsheet, FileCode, Video, Music, File } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 
 export type UserState = 'not-logged-in' | 'receiver' | 'admin';
 
