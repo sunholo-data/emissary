@@ -34,6 +34,64 @@ export function useThrottledMessages(
     lastProcessedContentRef.current = '';
   };
 
+  // Carefully split content while preserving markdown and whitespace
+  const splitContentIntoChunks = (content: string): string[] => {
+    // Find markdown sequences and their positions
+    const markdownPositions: Array<{start: number; end: number}> = [];
+    const markdownRegex = /(\*\*.*?\*\*|\*.*?\*|`.*?`|__.*?__|_.*?_|\[.*?\]\(.*?\)|\n\s*[-*+]\s.*$)/gm;
+    
+    let match;
+    while ((match = markdownRegex.exec(content)) !== null) {
+      markdownPositions.push({
+        start: match.index,
+        end: match.index + match[0].length
+      });
+    }
+
+    // Initialize chunks array
+    const chunks: string[] = [];
+    let currentPos = 0;
+    const targetChunkSize = 20;
+
+    while (currentPos < content.length) {
+      // Find the next safe split point
+      let chunkEnd = currentPos + targetChunkSize;
+      
+      // Check if this chunk would split a markdown sequence
+      const conflictingMd = markdownPositions.find(
+        pos => pos.start < chunkEnd && pos.end > currentPos
+      );
+
+      if (conflictingMd) {
+        // If we're inside a markdown sequence, extend the chunk to include it
+        if (currentPos >= conflictingMd.start) {
+          chunkEnd = conflictingMd.end;
+        } else {
+          // If we haven't started the markdown sequence yet, end before it
+          chunkEnd = conflictingMd.start;
+        }
+      }
+
+      // Adjust chunk end to not split words
+      if (chunkEnd < content.length) {
+        // Look for a space or newline to split on
+        const nextSpace = content.indexOf(' ', chunkEnd);
+        const nextNewline = content.indexOf('\n', chunkEnd);
+        const nextSplit = Math.min(
+          nextSpace !== -1 ? nextSpace : content.length,
+          nextNewline !== -1 ? nextNewline : content.length
+        );
+        chunkEnd = nextSplit;
+      }
+
+      // Add the chunk
+      chunks.push(content.slice(currentPos, chunkEnd));
+      currentPos = chunkEnd;
+    }
+
+    return chunks;
+  };
+
   useEffect(() => {
     if (messages.length === 0) {
       resetThrottled();
@@ -62,20 +120,17 @@ export function useThrottledMessages(
     const streamingMessage = lastMessage;
     const fullContent = streamingMessage.content;
 
-    // Only process content we haven't seen before
+    // Only process new content
     const newContent = fullContent.slice(lastProcessedContentRef.current.length);
     
     if (newContent) {
-      // Split into reasonable chunks while preserving words
-      const chunks = newContent.match(/[\w\s]{1,20}[,.!?]|\s+\w+|\w+|[^\w\s]/g) || [newContent];
-      
+      const chunks = splitContentIntoChunks(newContent);
       console.log('Processing new content:', {
         newContentLength: newContent.length,
         numberOfChunks: chunks.length,
         currentQueueLength: queueRef.current.length,
         isCurrentlyProcessing: processingRef.current
       });
-
       queueRef.current.push(...chunks);
 
       if (!processingRef.current) {
@@ -92,17 +147,25 @@ export function useThrottledMessages(
 
     processingRef.current = true;
     const chunk = queueRef.current.shift() || '';
+    
+    // Preserve trailing whitespace when accumulating content
     lastProcessedContentRef.current += chunk;
 
-    const words = chunk.trim().split(/\s+/).length;
-    const delay = Math.min(Math.max((words / wordsPerSecond) * 1000, minDelay), maxDelay);
-
+    // Calculate delay based on visible characters rather than whitespace
+    const visibleChars = chunk.trim().length;
+    const delay = Math.min(
+      Math.max((visibleChars / (wordsPerSecond * 5)) * 1000, minDelay),
+      maxDelay
+    );
+    
+    /*
     console.log('Processing chunk:', {
       chunkLength: chunk.length,
-      words,
+      visibleChars,
       calculatedDelay: delay,
       remainingInQueue: queueRef.current.length,
     });
+    */
 
     setThrottledMessages([
       ...currentMessages,
