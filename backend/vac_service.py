@@ -42,14 +42,15 @@ def first_impression(contents, instructions, trace=None):
         system_instruction=system_msg,
     )
 
-    response = model.generate_content(contents)
-    
-    gen.end(output=response.text)
+    try:
+        response = model.generate_content(contents)
+        msg = response.text or "No response received"
+    except Exception as e:
+        msg = f"Error in first_impression: {str(e)}"
 
-    if response:
-      return response.text
-    else:
-      return "No answer given"
+    gen.end(output=msg)
+    
+    return msg
 
 def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, **kwargs):
 

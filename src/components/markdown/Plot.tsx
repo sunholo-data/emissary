@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -12,7 +12,7 @@ import {
   YAxis,
   CartesianGrid,
   Cell,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
@@ -70,6 +70,26 @@ const COLORS = [
 ];
 
 export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [containerHeight, setContainerHeight] = useState<number>(0);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Update dimensions on mount and window resize
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { width } = containerRef.current.getBoundingClientRect();
+        // Set height based on width to maintain aspect ratio
+        setContainerWidth(width);
+        setContainerHeight(width); // 1:1 aspect ratio, adjust multiplier as needed
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   const plotId = useMemo(() => id || `plot-${++plotCounter}`, [id]);
 
@@ -133,13 +153,15 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
   const chartConfig = useMemo(() => {
     if (!parsedData?.series) return {};
     return parsedData.series.reduce((acc, series, index) => {
-      acc[series.dataKey] = {
+      const key = `${plotId}-${series.dataKey}-${index}`;
+      acc[key] = {
         label: series.dataKey,
         color: series.color || COLORS[index % COLORS.length]
       };
       return acc;
     }, {} as Record<string, { label: string; color: string }>);
-  }, [parsedData?.series]);
+  }, [parsedData?.series, plotId]);
+
 
   if (!parsedData?.data || !parsedData?.series) {
     return (
@@ -192,51 +214,57 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
               />
               <ChartTooltip content={<ChartTooltipContent />} />
               {parsedLayout.showLegend !== false && (
-                <ChartLegend content={<ChartLegendContent />} wrapperStyle={{ fontSize: '12px' }} />
+                <ChartLegend content={<ChartLegendContent />} />
               )}
-              {parsedData.series.map((series: SeriesConfig) => (
-                <Bar
-                  key={`${plotId}-${series.dataKey}`}
-                  dataKey={series.dataKey}
-                  fill={`var(--color-${series.dataKey})`}
-                  radius={4}
-                  name={series.dataKey}
-                />
-              ))}
+              {parsedData.series.map((series: SeriesConfig, index: number) => {
+                const key = `${plotId}-${series.dataKey}-${index}`;
+                return (
+                  <Bar
+                    key={key}
+                    dataKey={series.dataKey}
+                    fill={`var(--color-${key})`}
+                    radius={4}
+                    name={series.dataKey}
+                  />
+                );
+              })}
             </BarChart>
           );
-
+  
         case 'pie':
           return (
             <PieChart margin={margin}>
-              {parsedData.series.map((series: SeriesConfig) => (
-                <Pie
-                  key={`${plotId}-${series.dataKey}`}
-                  data={parsedData.data}
-                  dataKey={series.dataKey}
-                  nameKey="x"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={parsedLayout.pieConfig?.innerRadius || 0}
-                  outerRadius={parsedLayout.pieConfig?.outerRadius || '80%'}
-                  label={{ fontSize: 12 }}
-                  name={series.dataKey}
-                >
-                  {parsedData.data.map((_, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={COLORS[index % COLORS.length]} 
-                    />
-                  ))}
-                </Pie>
-              ))}
+              {parsedData.series.map((series: SeriesConfig, index: number) => {
+                const key = `${plotId}-${series.dataKey}-${index}`;
+                return (
+                  <Pie
+                    key={key}
+                    data={parsedData.data}
+                    dataKey={series.dataKey}
+                    nameKey="x"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={parsedLayout.pieConfig?.innerRadius || 0}
+                    outerRadius={parsedLayout.pieConfig?.outerRadius || '80%'}
+                    label={{ fontSize: 12 }}
+                    name={series.dataKey}
+                  >
+                    {parsedData.data.map((_, cellIndex) => (
+                      <Cell 
+                        key={`${key}-cell-${cellIndex}`} 
+                        fill={COLORS[cellIndex % COLORS.length]} 
+                      />
+                    ))}
+                  </Pie>
+                );
+              })}
               <ChartTooltip content={<ChartTooltipContent />} />
               {parsedLayout.showLegend !== false && (
-                <ChartLegend content={<ChartLegendContent />} wrapperStyle={{ fontSize: '12px' }} />
+                <ChartLegend content={<ChartLegendContent />} />
               )}
             </PieChart>
           );
-
+  
         case 'scatter':
           return (
             <ScatterChart margin={margin}>
@@ -274,19 +302,22 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
               />
               <ChartTooltip content={<ChartTooltipContent />} />
               {parsedLayout.showLegend !== false && (
-                <ChartLegend content={<ChartLegendContent />} wrapperStyle={{ fontSize: '12px' }} />
+                <ChartLegend content={<ChartLegendContent />} />
               )}
-              {parsedData.series.map((series: SeriesConfig) => (
-                <Scatter
-                  key={`${plotId}-${series.dataKey}`}
-                  data={parsedData.data}
-                  fill={`var(--color-${series.dataKey})`}
-                  name={series.dataKey}
-                />
-              ))}
+              {parsedData.series.map((series: SeriesConfig, index: number) => {
+                const key = `${plotId}-${series.dataKey}-${index}`;
+                return (
+                  <Scatter
+                    key={key}
+                    data={parsedData.data}
+                    fill={`var(--color-${key})`}
+                    name={series.dataKey}
+                  />
+                );
+              })}
             </ScatterChart>
           );
-
+  
         case 'line':
         default:
           return (
@@ -322,25 +353,28 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
               />
               <ChartTooltip content={<ChartTooltipContent />} />
               {parsedLayout.showLegend !== false && (
-                <ChartLegend content={<ChartLegendContent />} wrapperStyle={{ fontSize: '12px' }} />
+                <ChartLegend content={<ChartLegendContent />} />
               )}
-              {parsedData.series.map((series: SeriesConfig) => (
-                <Line
-                  key={`${plotId}-${series.dataKey}`}
-                  type={series.type || "monotone"}
-                  dataKey={series.dataKey}
-                  stroke={`var(--color-${series.dataKey})`}
-                  dot={false}
-                  name={series.dataKey}
-                />
-              ))}
+              {parsedData.series.map((series: SeriesConfig, index: number) => {
+                const key = `${plotId}-${series.dataKey}-${index}`;
+                return (
+                  <Line
+                    key={key}
+                    type={series.type || "monotone"}
+                    dataKey={series.dataKey}
+                    stroke={`var(--color-${key})`}
+                    dot={false}
+                    name={series.dataKey}
+                  />
+                );
+              })}
             </LineChart>
           );
       }
     };
 
     return (
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer height="100%" aspect={1}>
         {chartContent()}
       </ResponsiveContainer>
     );
@@ -354,10 +388,14 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
         </CardHeader>
       )}
       <CardContent className="p-2 sm:p-4">
-        <div className="h-[140px]">
-          <ChartContainer config={chartConfig} className="w-full h-full">
-            {renderChart()}
-          </ChartContainer>
+        <div ref={containerRef} className="w-full" style={{ height: containerHeight }}>
+          {containerWidth > 0 && containerHeight > 0 && (
+            <ChartContainer config={chartConfig} className="w-full h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                {renderChart()}
+              </ResponsiveContainer>
+            </ChartContainer>
+          )}
         </div>
       </CardContent>
     </Card>

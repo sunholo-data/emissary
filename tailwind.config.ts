@@ -18,6 +18,9 @@ const config = {
     },
     extend: {
       colors: {
+        customPurple: "hsl(286, 32%, 36%)",
+        customYellow: "hsl(46, 32%, 36%)",
+        customGreen: "hsl(166, 32%, 36%)",
         border: "hsl(214.3, 31.8%, 91.4%)",
         input: "hsl(214.3, 31.8%, 91.4%)",
         ring: "hsl(222.2, 84%, 4.9%)",
