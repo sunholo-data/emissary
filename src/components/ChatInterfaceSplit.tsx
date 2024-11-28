@@ -1,34 +1,16 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Send, LogIn } from 'lucide-react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import MessageContent from '@/components/MessageContent';
 import type { ChatMessage } from '@/types';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import RelativeTime from '@/components/RelativeTime';
+import type { SplitChatProps } from '@/types/chat';
+import { MessageControls } from '@/components/MessageControls';
+import { ChatInput } from '@/components/ChatInput';
 
-export type ChatInterfaceProps = {
-  botMessages: ChatMessage[];
-  humanMessages: ChatMessage[];
-  input: string;
-  activeChat: 'bot' | 'human';
-  botName: string;
-  botAvatar: string;
-  recipientName: string;
-  senderName: string;
-  userState: string;
-  onInputChange: (value: string) => void;
-  onSendMessage: () => void;
-  onLogin: () => void;
-  setActiveChat: (chat: 'bot' | 'human') => void;
-  isStreaming: boolean;
-  error: string | null;
-};
-
-export default function ChatInterface({
+export default function ChatInterfaceSplit({
   botMessages,
   humanMessages,
   input,
@@ -43,8 +25,9 @@ export default function ChatInterface({
   onLogin,
   setActiveChat,
   isStreaming,
-  error
-}: ChatInterfaceProps) {
+  error,
+  footer
+}: SplitChatProps) {
   const botScrollAreaRef = useRef<HTMLDivElement>(null);
   const humanScrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +44,19 @@ export default function ChatInterface({
   useEffect(() => {
     scrollToBottom(humanScrollAreaRef);
   }, [humanMessages]);
+
+  useEffect(() => {
+    // Small delay to allow tab content to mount
+    const timer = setTimeout(() => {
+      if (activeChat === 'bot' && botScrollAreaRef.current) {
+        scrollToBottom(botScrollAreaRef);
+      } else if (activeChat === 'human' && humanScrollAreaRef.current) {
+        scrollToBottom(humanScrollAreaRef);
+      }
+    }, 100);
+  
+    return () => clearTimeout(timer);
+  }, [activeChat]);
 
   // Add meta viewport tag management
   useEffect(() => {
@@ -84,11 +80,6 @@ export default function ChatInterface({
     };
   }, []);
 
-  // Prevent default zoom behavior on input focus for iOS
-  const preventZoom = (e: React.FocusEvent<HTMLInputElement>) => {
-    const target = e.target as HTMLInputElement;
-    target.style.fontSize = '16px';
-  };
 
   const renderMessages = useCallback((messages: ChatMessage[], currentTab: 'bot' | 'human') => {
     return messages.map((message, index) => {
@@ -150,14 +141,7 @@ export default function ChatInterface({
                 <RelativeTime timestamp={message.timestamp || Date.now()} />
               </div>
             </div>
-
-            <div 
-              className={`rounded-lg p-3 break-words ${
-                isUserMessage
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-muted'
-              } max-w-[85%]`}
-            >
+            <div className="max-w-[85%]">
               <MessageContent 
                 content={message.content} 
                 isUser={isUserMessage} 
@@ -170,77 +154,6 @@ export default function ChatInterface({
     });
   }, [userState, botAvatar, botName, senderName, recipientName]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      onSendMessage();
-    }
-  };
-
-  const renderInputArea = () => {
-    if (activeChat === 'bot') {
-      return (
-        <>
-          <Input
-            className="text-base"
-            placeholder={`Ask a question to ${botName}...`}
-            value={input}
-            onChange={(e) => onInputChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={preventZoom}
-            disabled={isStreaming}
-            style={{
-              fontSize: '16px',
-              WebkitAppearance: 'none',
-              borderRadius: '8px'
-            }}
-          />
-          <Button 
-            onClick={onSendMessage}
-            disabled={isStreaming || !input.trim()}
-            className="min-w-[44px] min-h-[44px]"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </>
-      );
-    } else if (userState === 'not-logged-in') {
-      return (
-        <Button 
-          onClick={onLogin} 
-          className="w-full min-h-[44px]"
-        >
-          <LogIn className="w-4 h-4 mr-2" /> Log in to reply to {senderName}
-        </Button>
-      );
-    } else {
-      return (
-        <>
-          <Input
-            className="text-base"
-            placeholder={`Reply to ${userState === 'admin' ? recipientName : senderName}...`}
-            value={input}
-            onChange={(e) => onInputChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={preventZoom}
-            disabled={isStreaming}
-            style={{
-              fontSize: '16px',
-              WebkitAppearance: 'none',
-              borderRadius: '8px'
-            }}
-          />
-          <Button 
-            onClick={onSendMessage}
-            disabled={isStreaming || !input.trim()}
-            className="min-w-[44px] min-h-[44px]"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </>
-      );
-    }
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -249,22 +162,6 @@ export default function ChatInterface({
         onValueChange={(value) => setActiveChat(value as 'bot' | 'human')} 
         className="flex flex-col h-full"
       >
-        <div className="w-full border-b bg-muted">
-          <TabsList className="w-full grid grid-cols-2 rounded-none border-0 bg-transparent p-0">
-            <TabsTrigger 
-              value="bot"
-              className="min-h-[44px] rounded-none border-0 data-[state=active]:bg-white data-[state=active]:shadow-none px-4"
-            >
-              {botName}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="human"
-              className="min-h-[44px] rounded-none border-0 data-[state=active]:bg-white data-[state=active]:shadow-none px-4"
-            >
-              Reply to {userState === 'admin' ? recipientName : senderName}
-            </TabsTrigger>
-          </TabsList>
-        </div>
         <div className="flex-grow flex flex-col min-h-0 overflow-hidden bg-white">
           <TabsContent 
             value="bot" 
@@ -284,7 +181,7 @@ export default function ChatInterface({
               </div>
             </ScrollArea>
           </TabsContent>
-
+  
           <TabsContent 
             value="human" 
             className="flex-grow flex flex-col data-[state=active]:flex overflow-hidden m-0 border-0 p-0"
@@ -296,11 +193,33 @@ export default function ChatInterface({
             </ScrollArea>
           </TabsContent>
         </div>
-
-        <div className="flex space-x-2 p-4 border-t bg-white">
-          {renderInputArea()}
-        </div>
-      </Tabs>
-    </div>
+  
+        <div className="border-t bg-white">
+        <MessageControls
+          activeChat={activeChat}
+          setActiveChat={setActiveChat}
+          botName={botName}
+          botAvatar={botAvatar}
+          userState={userState}
+          recipientName={recipientName}
+          senderName={senderName}
+          footer={footer}
+          humanMessages={humanMessages} 
+        />
+        <ChatInput
+          input={input}
+          activeChat={activeChat}
+          botName={botName}
+          recipientName={recipientName}
+          senderName={senderName}
+          userState={userState}
+          isStreaming={isStreaming}
+          onInputChange={onInputChange}
+          onSendMessage={onSendMessage}
+          onLogin={onLogin}
+        />
+      </div>
+    </Tabs>
+  </div>
   );
 }

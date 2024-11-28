@@ -135,23 +135,23 @@ prompts:
 
       Images (jpg, png, webp):
 
-      Copy<preview uri="https://bucket/image.jpg" type="image/jpeg" name="Profile Photo" />
+      <preview uri="https://bucket/image.jpg" type="image/jpeg" name="Profile Photo" />
       <preview uri="https://bucket/icon.png" type="image/png" name="App Icon" />
       <preview uri="https://bucket/photo.webp" type="image/webp" name="Product Image" />
 
       Audio Files (mp3, wav):
 
-      Copy<preview uri="https://bucket/song.mp3" type="audio/mp3" name="Background Music" />
+      <preview uri="https://bucket/song.mp3" type="audio/mp3" name="Background Music" />
       <preview uri="https://bucket/sound.wav" type="audio/wav" name="Sound Effect" />
 
       Video Files (mp4, webm):
 
-      Copy<preview uri="https://bucket/demo.mp4" type="video/mp4" name="Product Demo" />
+      <preview uri="https://bucket/demo.mp4" type="video/mp4" name="Product Demo" />
       <preview uri="https://bucket/clip.webm" type="video/webm" name="Tutorial Video" />
 
       PDF Documents:
 
-      Copy<preview uri="https://bucket/doc.pdf" type="application/pdf" name="User Manual" />
+      <preview uri="https://bucket/doc.pdf" type="application/pdf" name="User Manual" />
       Supported File Types
 
       Images: jpeg, png, webp, heic, heif

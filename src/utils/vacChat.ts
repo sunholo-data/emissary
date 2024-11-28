@@ -100,49 +100,64 @@ export async function vacChat(params: VacChatParams) {
 
         const decoder = new TextDecoder();
         let done = false;
-        
+        let lastSentContent = '';
         try {
             while (!done) {
                 const result = await reader.read();
                 done = result.done;
                 
                 if (done) {
-                    if (accumulatedContent) {
-                        params.onBotMessage({ 
-                            sender: 'bot', 
-                            content: accumulatedContent,
-                        });
+                    if (accumulatedContent && accumulatedContent !== lastSentContent) {
+                        const newContent = accumulatedContent.slice(lastSentContent.length);
+                        if (newContent.length > 0) {  // Only send if there's actually new content
+                            lastSentContent = accumulatedContent;
+                            params.onBotMessage({ 
+                                sender: 'bot', 
+                                content: newContent,
+                            });
+                        }
                     }
                     break;
                 }
                 
                 const chunk = decoder.decode(result.value, { stream: true });
-
+        
                 if (chunk) {
                     accumulatedContent += chunk;
+                    const newContent = accumulatedContent.slice(lastSentContent.length);
+                    lastSentContent = accumulatedContent;
+                    
                     console.log('Chunk received:', {
                         chunkLength: chunk.length,
+                        newContentLength: newContent.length,
                         totalLength: accumulatedContent.length,
                         isDone: result.done
                     });
-                    params.onBotMessage({ 
-                        sender: 'bot', 
-                        content: accumulatedContent,
-                    });
+                    
+                    if (newContent.length > 0) {  // Only send if there's new content
+                        params.onBotMessage({ 
+                            sender: 'bot', 
+                            content: newContent,
+                        });
+                    }
                 }
                 
                 // Final flush of the decoder
                 const final = decoder.decode(undefined);
                 if (final) {
                     accumulatedContent += final;
-                    params.onBotMessage({ 
-                        sender: 'bot', 
-                        content: accumulatedContent,
-                    });
+                    const newContent = accumulatedContent.slice(lastSentContent.length);
+                    
+                    if (newContent.length > 0) {  // Only send if there's new content
+                        lastSentContent = accumulatedContent;
+                        params.onBotMessage({ 
+                            sender: 'bot', 
+                            content: newContent,
+                        });
+                    }
                 }
-
+        
                 console.log('Stream completed, total content length:', accumulatedContent.length);
-
             }
         } finally {
             try {
