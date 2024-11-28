@@ -281,8 +281,8 @@ export default function Emissary({
     botMessages,
     isStreaming,
     {
-      wordsPerSecond: 100, // Adjust this value to control speed
-      minDelay: 10,      // Minimum delay between chunks in ms
+      wordsPerSecond: 50, // Adjust this value to control speed
+      minDelay: 20,      // Minimum delay between chunks in ms
       maxDelay: 150      // Maximum delay between chunks in ms
     }
   );

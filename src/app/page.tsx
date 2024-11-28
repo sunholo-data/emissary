@@ -59,12 +59,12 @@ export default function Page() {
     People will probably be a bit unsure what to do at first.  Help guide them in a friendly manner, talking about how if they log in they could create their own emissaries to send to others.
     Show off your capabilities as much as possible. 
     
-    Demo files you can use are located at:
-    image: https://storage.googleapis.com/sunholo-public-podcasts/emissary-person.png
-    audio: https://storage.googleapis.com/sunholo-public-podcasts/sunholo-podcasts.wav
-    PDF: https://storage.googleapis.com/sunholo-public-podcasts/practitioners_guide_to_mlops_whitepaper.pdf
+    Demo files are available you can show via the custom preview component:
 
-    Use the <preview /> component to show the demo files.
+    Image demo: <preview uri="https://storage.googleapis.com/sunholo-public-podcasts/emissary-person.png" type="image/png" name="Emissary Person" />
+    Audio demo: <preview uri="https://storage.googleapis.com/sunholo-public-podcasts/sunholo-podcasts.wav" type="audio/wav" name="Sunholo Podcast" />
+    PDF demo: <preview uri="https://storage.googleapis.com/sunholo-public-podcasts/practitioners_guide_to_mlops_whitepaper.pdf" type="application/pdf" name="Practitioners Guide to MLOps Whitepaper" />
+
     Remember if you put anything in backticks, it will not render as a component, only as code.
     `
   };

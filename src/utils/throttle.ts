@@ -7,6 +7,11 @@ interface ThrottleOptions {
   maxDelay?: number;
 }
 
+interface ContentSegment {
+  content: string;
+  hash: string;
+}
+
 export function useThrottledMessages(
   messages: ChatMessage[],
   isStreaming: boolean,
@@ -23,6 +28,7 @@ export function useThrottledMessages(
   const processingRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastProcessedContentRef = useRef('');
+  const processedSegmentsRef = useRef<Set<string>>(new Set());
 
   const resetThrottled = () => {
     if (timeoutRef.current) {
@@ -32,11 +38,35 @@ export function useThrottledMessages(
     queueRef.current = [];
     processingRef.current = false;
     lastProcessedContentRef.current = '';
+    processedSegmentsRef.current.clear();
   };
 
-  // Carefully split content while preserving markdown and whitespace
+  // Simple hash function for content segments
+  const hashContent = (content: string): string => {
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return hash.toString(36);
+  };
+
+  // Check if content segment is unique
+  const isUniqueSegment = (content: string): boolean => {
+    const hash = hashContent(content);
+    if (processedSegmentsRef.current.has(hash)) {
+      console.log('Duplicate content detected:', {
+        contentLength: content.length,
+        contentPreview: content.slice(0, 50)
+      });
+      return false;
+    }
+    processedSegmentsRef.current.add(hash);
+    return true;
+  };
+
   const splitContentIntoChunks = (content: string): string[] => {
-    // Find markdown sequences and their positions
     const markdownPositions: Array<{start: number; end: number}> = [];
     const markdownRegex = /(\*\*.*?\*\*|\*.*?\*|`.*?`|__.*?__|_.*?_|\[.*?\]\(.*?\)|\n\s*[-*+]\s.*$)/gm;
     
@@ -48,33 +78,26 @@ export function useThrottledMessages(
       });
     }
 
-    // Initialize chunks array
     const chunks: string[] = [];
     let currentPos = 0;
     const targetChunkSize = 20;
 
     while (currentPos < content.length) {
-      // Find the next safe split point
       let chunkEnd = currentPos + targetChunkSize;
       
-      // Check if this chunk would split a markdown sequence
       const conflictingMd = markdownPositions.find(
         pos => pos.start < chunkEnd && pos.end > currentPos
       );
 
       if (conflictingMd) {
-        // If we're inside a markdown sequence, extend the chunk to include it
         if (currentPos >= conflictingMd.start) {
           chunkEnd = conflictingMd.end;
         } else {
-          // If we haven't started the markdown sequence yet, end before it
           chunkEnd = conflictingMd.start;
         }
       }
 
-      // Adjust chunk end to not split words
       if (chunkEnd < content.length) {
-        // Look for a space or newline to split on
         const nextSpace = content.indexOf(' ', chunkEnd);
         const nextNewline = content.indexOf('\n', chunkEnd);
         const nextSplit = Math.min(
@@ -84,8 +107,10 @@ export function useThrottledMessages(
         chunkEnd = nextSplit;
       }
 
-      // Add the chunk
-      chunks.push(content.slice(currentPos, chunkEnd));
+      const chunk = content.slice(currentPos, chunkEnd);
+      if (isUniqueSegment(chunk)) {
+        chunks.push(chunk);
+      }
       currentPos = chunkEnd;
     }
 
@@ -119,11 +144,9 @@ export function useThrottledMessages(
     const currentMessages = messages.slice(0, -1);
     const streamingMessage = lastMessage;
     const fullContent = streamingMessage.content;
-
-    // Only process new content
     const newContent = fullContent.slice(lastProcessedContentRef.current.length);
     
-    if (newContent) {
+    if (newContent && isUniqueSegment(newContent)) {
       const chunks = splitContentIntoChunks(newContent);
       console.log('Processing new content:', {
         newContentLength: newContent.length,
@@ -147,11 +170,8 @@ export function useThrottledMessages(
 
     processingRef.current = true;
     const chunk = queueRef.current.shift() || '';
-    
-    // Preserve trailing whitespace when accumulating content
     lastProcessedContentRef.current += chunk;
 
-    // Calculate delay based on visible characters rather than whitespace
     const visibleChars = chunk.trim().length;
     const delay = Math.min(
       Math.max((visibleChars / (wordsPerSecond * 5)) * 1000, minDelay),
