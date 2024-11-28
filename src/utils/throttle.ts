@@ -1,4 +1,3 @@
-//src/utils/throttle.ts
 import { useState, useRef, useEffect } from 'react';
 import type { ChatMessage } from '@/types';
 
@@ -12,10 +11,10 @@ export function useThrottledMessages(
   messages: ChatMessage[],
   isStreaming: boolean,
   options: ThrottleOptions = {}
-): [ChatMessage[], (messages: ChatMessage[]) => void] {
+): [ChatMessage[], () => void] {
   const {
-    wordsPerSecond = 10,
-    minDelay = 50,
+    wordsPerSecond = 100,
+    minDelay = 10,
     maxDelay = 250
   } = options;
 
@@ -23,35 +22,23 @@ export function useThrottledMessages(
   const queueRef = useRef<string[]>([]);
   const processingRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const accumulatedContentRef = useRef('');
-  const forceCompleteRef = useRef(false);
+  const lastProcessedContentRef = useRef('');
 
-  const resetThrottledMessages = (newMessages: ChatMessage[]) => {
-    console.log('Throttle reset called:', {
-      hasTimeout: !!timeoutRef.current,
-      queueLength: queueRef.current.length,
-      isProcessing: processingRef.current,
-      accumulatedLength: accumulatedContentRef.current.length
-    });
-
-    // If we're currently processing a queue, mark for completion but don't interrupt
-    if (processingRef.current && queueRef.current.length > 0) {
-      forceCompleteRef.current = true;
-      return;
-    }
-
+  const resetThrottled = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    setThrottledMessages(newMessages);
+    setThrottledMessages(messages);
     queueRef.current = [];
     processingRef.current = false;
-    accumulatedContentRef.current = '';
-    forceCompleteRef.current = false;
+    lastProcessedContentRef.current = '';
   };
 
   useEffect(() => {
-    if (messages.length === 0) return;
+    if (messages.length === 0) {
+      resetThrottled();
+      return;
+    }
 
     const lastMessage = messages[messages.length - 1];
     
@@ -59,17 +46,14 @@ export function useThrottledMessages(
       isStreaming,
       isBotMessage: lastMessage.sender === 'bot',
       messageLength: lastMessage.content.length,
-      accumulatedLength: accumulatedContentRef.current.length,
       queueLength: queueRef.current.length,
       isProcessing: processingRef.current
     });
 
     // Only do immediate reset if we're not processing anything
     if (!isStreaming || lastMessage.sender !== 'bot') {
-      if (!processingRef.current || queueRef.current.length === 0) {
-        resetThrottledMessages(messages);
-      } else {
-        forceCompleteRef.current = true;
+      if (!processingRef.current) {
+        resetThrottled();
       }
       return;
     }
@@ -78,10 +62,11 @@ export function useThrottledMessages(
     const streamingMessage = lastMessage;
     const fullContent = streamingMessage.content;
 
-    // Only process the new content since last update
-    const newContent = fullContent.slice(accumulatedContentRef.current.length);
+    // Only process content we haven't seen before
+    const newContent = fullContent.slice(lastProcessedContentRef.current.length);
     
     if (newContent) {
+      // Split into reasonable chunks while preserving words
       const chunks = newContent.match(/[\w\s]{1,20}[,.!?]|\s+\w+|\w+|[^\w\s]/g) || [newContent];
       
       console.log('Processing new content:', {
@@ -94,40 +79,22 @@ export function useThrottledMessages(
       queueRef.current.push(...chunks);
 
       if (!processingRef.current) {
-        setThrottledMessages([
-          ...currentMessages,
-          { ...streamingMessage, content: accumulatedContentRef.current }
-        ]);
         processQueue(currentMessages, streamingMessage);
       }
     }
   }, [messages, isStreaming]);
 
   const processQueue = (currentMessages: ChatMessage[], streamingMessage: ChatMessage) => {
-    if (queueRef.current.length === 0 || (forceCompleteRef.current && !isStreaming)) {
-      console.log('Queue processing complete', {
-        forceComplete: forceCompleteRef.current,
-        remainingQueue: queueRef.current.length
-      });
+    if (queueRef.current.length === 0) {
       processingRef.current = false;
-      
-      // If we were forced to complete, do final update with full content
-      if (forceCompleteRef.current) {
-        setThrottledMessages([
-          ...currentMessages,
-          { ...streamingMessage, content: streamingMessage.content }
-        ]);
-        forceCompleteRef.current = false;
-      }
       return;
     }
 
     processingRef.current = true;
     const chunk = queueRef.current.shift() || '';
-    
-    accumulatedContentRef.current += chunk;
+    lastProcessedContentRef.current += chunk;
 
-    const words = chunk.split(/\s+/).length;
+    const words = chunk.trim().split(/\s+/).length;
     const delay = Math.min(Math.max((words / wordsPerSecond) * 1000, minDelay), maxDelay);
 
     console.log('Processing chunk:', {
@@ -135,12 +102,14 @@ export function useThrottledMessages(
       words,
       calculatedDelay: delay,
       remainingInQueue: queueRef.current.length,
-      totalAccumulated: accumulatedContentRef.current.length
     });
 
     setThrottledMessages([
       ...currentMessages,
-      { ...streamingMessage, content: accumulatedContentRef.current }
+      { 
+        ...streamingMessage, 
+        content: lastProcessedContentRef.current 
+      }
     ]);
 
     timeoutRef.current = setTimeout(() => {
@@ -156,5 +125,5 @@ export function useThrottledMessages(
     };
   }, []);
 
-  return [throttledMessages, resetThrottledMessages];
+  return [throttledMessages, resetThrottled];
 }

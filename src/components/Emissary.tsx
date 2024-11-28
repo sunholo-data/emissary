@@ -62,6 +62,8 @@ export default function Emissary({
   const [error, setError] = useState<string | null>(null);
   const currentMessageRef = useRef<string>('');
   const lastProcessedMessageRef = useRef<string | null>(null);
+  const streamingContentRef = useRef<string>('');
+  const previousContentLengthRef = useRef<number>(0);
 
   const [config, setConfig] = useState<EmissaryConfigState>({
     botId: '',
@@ -153,16 +155,17 @@ export default function Emissary({
   }, [activeChat, currentUser, config.shareId, humanMessages]);
 
   const handleBotMessage = async (message: string) => {
-    // Don't process if it's the same message
     if (message === lastProcessedMessageRef.current) return;
     
     setIsStreaming(true);
     setError(null);
     lastProcessedMessageRef.current = message;
+    
+    // Reset streaming refs at start of new message
+    streamingContentRef.current = '';
+    previousContentLengthRef.current = 0;
   
     try {
-      let messageStarted = false;
-  
       await vacChat({
         userMessage: message,
         chatHistory: botMessages.map(msg => ({
@@ -174,21 +177,22 @@ export default function Emissary({
           content: msg.content,
         })),
         onBotMessage: (response) => {
-          messageStarted = true;
-          // Append new content to current message instead of replacing
-          currentMessageRef.current += response.content;
+          // Only append new content
+          const newContent = response.content;
+          streamingContentRef.current += newContent;
           
           setBotMessages(prev => {
             const newMessages = [...prev];
             if (newMessages.length > 0) {
-              // Update the last message with accumulated content
               newMessages[newMessages.length - 1] = {
                 ...newMessages[newMessages.length - 1],
-                content: currentMessageRef.current
+                content: streamingContentRef.current
               };
             }
             return newMessages;
           });
+          
+          previousContentLengthRef.current = streamingContentRef.current.length;
         },
         apiEndpoint: '/vac/streaming/emissary',
         instructions: initialInstructions,
@@ -277,7 +281,7 @@ export default function Emissary({
     botMessages,
     isStreaming,
     {
-      wordsPerSecond: 20, // Adjust this value to control speed
+      wordsPerSecond: 100, // Adjust this value to control speed
       minDelay: 10,      // Minimum delay between chunks in ms
       maxDelay: 150      // Maximum delay between chunks in ms
     }
