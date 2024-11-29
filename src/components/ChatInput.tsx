@@ -42,11 +42,14 @@ export function ChatInput({
     }
   };
 
-  if (userState === 'not-logged-in') {
+  // Show login button only for human chat when not logged in
+  if (activeChat === 'human' && userState === 'not-logged-in') {
     return (
-      <Button onClick={onLogin} className="w-full min-h-[44px]">
-        <LogIn className="w-4 h-4 mr-2" /> Log in to reply
-      </Button>
+      <div className="p-4">
+        <Button onClick={onLogin} className="w-full min-h-[44px]">
+          <LogIn className="w-4 h-4 mr-2" /> Log in to continue the conversation
+        </Button>
+      </div>
     );
   }
 
