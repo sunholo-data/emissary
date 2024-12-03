@@ -42,9 +42,14 @@ def first_impression(contents, instructions, trace=None):
         system_instruction=system_msg,
     )
 
+    msg = "Let me look at that and get back to you with more detail."
     try:
         response = model.generate_content(contents)
-        msg = response.text or "No response received"
+        if response:
+            try:
+                msg = response.text
+            except Exception as e:
+                log.error(f"response.text not working for {response} - {str(e)}")
     except Exception as e:
         msg = f"Error in first_impression: {str(e)}"
 
