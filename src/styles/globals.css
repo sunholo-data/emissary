@@ -87,6 +87,15 @@
     /* Add new code block background colors */
     --code-bg: hsl(210, 20%, 98%);
     --code-bg-dark: hsl(222.2, 84%, 5.9%);
+    /* New chat role colors */
+    --chat-bot: hsl(270, 20%, 50%);      /* Your existing primary purple */
+    --chat-bot-bg: hsl(270, 20%, 96%);    /* Light purple bg */
+    --chat-admin: hsl(220, 70%, 50%);     /* Using your chart-1 blue */
+    --chat-admin-bg: hsl(220, 70%, 96%);  /* Light blue bg */
+    --chat-receiver: hsl(160, 60%, 45%);  /* Using your chart-2 green */
+    --chat-receiver-bg: hsl(160, 60%, 96%); /* Light green bg */
+    --chat-user: var(--primary);          /* Default user color */
+    --chat-user-bg: var(--primary);       /* Default user bg */
   }
 
   .dark {
@@ -114,6 +123,15 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    /* Dark mode chat role colors */
+    --chat-bot: hsl(270, 20%, 70%);       /* Lighter purple */
+    --chat-bot-bg: hsl(270, 20%, 20%);    /* Dark purple bg */
+    --chat-admin: hsl(220, 70%, 70%);     /* Lighter blue */
+    --chat-admin-bg: hsl(220, 70%, 20%);  /* Dark blue bg */
+    --chat-receiver: hsl(160, 60%, 70%);  /* Lighter green */
+    --chat-receiver-bg: hsl(160, 60%, 20%); /* Dark green bg */
+    --chat-user: var(--primary);          /* Default user color */
+    --chat-user-bg: var(--primary);       /* Default user bg */
   }
 
   *,

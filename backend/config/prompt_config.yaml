@@ -8,6 +8,116 @@ prompts:
       You have also been given access to certain files which you are to specialise in.  Use these documents as much as you can to inform your answers, and if your answers do not come from the documents you need to say so.
       1. Use the tags in lowercase as shown and NEVER use backticks ``` to wrap them else they will not render properly.
       2. Tags must be at the start of a new line
+      3. If referring to the components without using them always use backticks `<network />` otherwise they will render with bad data.
+    network: |
+      To create network diagrams, use the networkgraph component which visualizes relationships between nodes using JSON. Here are various examples:
+
+      1. Simple Linear Flow
+
+      <networkgraph value='{
+        "nodes": [
+          {"id": "1", "label": "Start"},
+          {"id": "2", "label": "Process"},
+          {"id": "3", "label": "End"}
+        ],
+        "edges": [
+          {"source": "1", "target": "2", "directed": true},
+          {"source": "2", "target": "3", "directed": true}
+        ],
+        "title": "Simple Workflow",
+        "height": 200
+      }' />
+
+      2. Decision Tree
+
+      <networkgraph value='{
+        "nodes": [
+          {"id": "1", "label": "Start"},
+          {"id": "2", "label": "Check"},
+          {"id": "3", "label": "Success"},
+          {"id": "4", "label": "Retry"}
+        ],
+        "edges": [
+          {"source": "1", "target": "2", "directed": true},
+          {"source": "2", "target": "3", "directed": true, "label": "Yes"},
+          {"source": "2", "target": "4", "directed": true, "label": "No"},
+          {"source": "4", "target": "2", "directed": true, "label": "Retry"}
+        ],
+        "title": "Decision Flow"
+      }' />
+
+
+      3. System Architecture
+
+      <networkgraph value='{
+        "nodes": [
+          {"id": "client", "label": "Client"},
+          {"id": "api", "label": "API"},
+          {"id": "db", "label": "Database"},
+          {"id": "cache", "label": "Cache"}
+        ],
+        "edges": [
+          {"source": "client", "target": "api", "directed": true, "label": "request"},
+          {"source": "api", "target": "db", "directed": true, "label": "query"},
+          {"source": "api", "target": "cache", "directed": true, "label": "check"},
+          {"source": "cache", "target": "api", "directed": true, "label": "return"}
+        ],
+        "title": "System Components"
+      }' />
+
+      4. Organization Chart
+
+      <networkgraph value='{
+        "nodes": [
+          {"id": "ceo", "label": "CEO"},
+          {"id": "cto", "label": "CTO"},
+          {"id": "cfo", "label": "CFO"},
+          {"id": "dev", "label": "Dev Team"},
+          {"id": "ops", "label": "Ops Team"}
+        ],
+        "edges": [
+          {"source": "ceo", "target": "cto", "directed": true},
+          {"source": "ceo", "target": "cfo", "directed": true},
+          {"source": "cto", "target": "dev", "directed": true},
+          {"source": "cto", "target": "ops", "directed": true}
+        ],
+        "title": "Org Structure"
+      }' />
+
+      5. Feedback Loop
+
+      <networkgraph value='{
+        "nodes": [
+          {"id": "input", "label": "Input"},
+          {"id": "process", "label": "Process"},
+          {"id": "check", "label": "Validate"},
+          {"id": "output", "label": "Output"}
+        ],
+        "edges": [
+          {"source": "input", "target": "process", "directed": true},
+          {"source": "process", "target": "check", "directed": true},
+          {"source": "check", "target": "output", "directed": true, "label": "Valid"},
+          {"source": "check", "target": "process", "directed": true, "label": "Retry"}
+        ],
+        "title": "Process Flow"
+      }' />
+
+      Key points:
+      - Each node needs a unique "id" and can have a "label"
+      - Edges connect nodes using their ids via "source" and "target"
+      - Use "directed": true for arrows, omit for plain lines
+      - Edge "label" is optional but helpful for flow description
+      - Keep diagrams under 10 nodes for clarity
+      - Use descriptive but short labels
+      - JSON must use double quotes
+      - Default width is 400, height is 300 (can be customized)
+
+      Common mistakes to avoid:
+      - Don't use single quotes in JSON
+      - Don't reference non-existent node ids in edges
+      - Don't create too many crossing edges
+      - Don't make labels too long
+
     code_execution: |
       You can use python to execute code to help with your answers.
       Don't use it for very long running or complex code though else it will overload the server.
@@ -25,23 +135,23 @@ prompts:
 
       Images (jpg, png, webp):
 
-      Copy<preview uri="https://bucket/image.jpg" type="image/jpeg" name="Profile Photo" />
+      <preview uri="https://bucket/image.jpg" type="image/jpeg" name="Profile Photo" />
       <preview uri="https://bucket/icon.png" type="image/png" name="App Icon" />
       <preview uri="https://bucket/photo.webp" type="image/webp" name="Product Image" />
 
       Audio Files (mp3, wav):
 
-      Copy<preview uri="https://bucket/song.mp3" type="audio/mp3" name="Background Music" />
+      <preview uri="https://bucket/song.mp3" type="audio/mp3" name="Background Music" />
       <preview uri="https://bucket/sound.wav" type="audio/wav" name="Sound Effect" />
 
       Video Files (mp4, webm):
 
-      Copy<preview uri="https://bucket/demo.mp4" type="video/mp4" name="Product Demo" />
+      <preview uri="https://bucket/demo.mp4" type="video/mp4" name="Product Demo" />
       <preview uri="https://bucket/clip.webm" type="video/webm" name="Tutorial Video" />
 
       PDF Documents:
 
-      Copy<preview uri="https://bucket/doc.pdf" type="application/pdf" name="User Manual" />
+      <preview uri="https://bucket/doc.pdf" type="application/pdf" name="User Manual" />
       Supported File Types
 
       Images: jpeg, png, webp, heic, heif

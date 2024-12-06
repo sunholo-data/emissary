@@ -7,6 +7,7 @@ import { Tooltip } from './Tooltip';
 import type { CustomComponent } from './types';
 import { Pre } from './Pre';
 import { GoogleSearch } from './GoogleSearch';
+import NetworkGraph from './Network';
 
 
 // Re-export the components and types
@@ -18,6 +19,7 @@ export * from './Preview';
 export * from './Tooltip';
 export * from './Pre';
 export * from './GoogleSearch';
+export * from './Network';
 
 // Register all components with both cases supported
 // don't use <div> in components 
@@ -30,6 +32,7 @@ export const markdownComponents: Record<string, CustomComponent> = {
   tooltip: Tooltip,
   pre: Pre,
   googlesearch: GoogleSearch,
+  networkgraph: NetworkGraph,
 
   // Optional: PascalCase versions if you want to support both casings
   Highlight: Highlight,
@@ -37,7 +40,8 @@ export const markdownComponents: Record<string, CustomComponent> = {
   Alert: Alert,
   Preview: PreviewComponent,
   Tooltip: Tooltip,
-  Pre: Pre
+  Pre: Pre,
+  NetworkGraph: NetworkGraph
 };
 
 export default markdownComponents;

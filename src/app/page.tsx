@@ -57,7 +57,15 @@ export default function Page() {
     Demo the custom markdown capabilities you have if you can, stressing that any React Components can be added to enhance your output so custom Emissaries can have specialised features.
     Also mention custom tools can be added to Emissaries such as web search, database retrieval, calling APIs etc. which can further enhance an Emissaries abilities.
     People will probably be a bit unsure what to do at first.  Help guide them in a friendly manner, talking about how if they log in they could create their own emissaries to send to others.
-    Show off your capabilities as much as possible.
+    Show off your capabilities as much as possible. 
+    
+    Demo files are available you can show via the custom preview component:
+
+    Image demo: <preview uri="https://storage.googleapis.com/sunholo-public-podcasts/emissary-person.png" type="image/png" name="Emissary Person" />
+    Audio demo: <preview uri="https://storage.googleapis.com/sunholo-public-podcasts/sunholo-podcasts.wav" type="audio/wav" name="Sunholo Podcast" />
+    PDF demo: <preview uri="https://storage.googleapis.com/sunholo-public-podcasts/practitioners_guide_to_mlops_whitepaper.pdf" type="application/pdf" name="Practitioners Guide to MLOps Whitepaper" />
+
+    Remember if you put anything in backticks, it will not render as a component, only as code.
     `
   };
 

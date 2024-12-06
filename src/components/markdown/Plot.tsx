@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -12,6 +12,7 @@ import {
   YAxis,
   CartesianGrid,
   Cell,
+  ResponsiveContainer,
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
@@ -69,6 +70,27 @@ const COLORS = [
 ];
 
 export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [containerHeight, setContainerHeight] = useState<number>(0);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Update dimensions on mount and window resize
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { width } = containerRef.current.getBoundingClientRect();
+        // Set height based on width to maintain aspect ratio
+        setContainerWidth(width);
+        setContainerHeight(width); // 1:1 aspect ratio, adjust multiplier as needed
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
   const plotId = useMemo(() => id || `plot-${++plotCounter}`, [id]);
 
   const cleanJsonString = (str: string): string => {
@@ -131,13 +153,15 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
   const chartConfig = useMemo(() => {
     if (!parsedData?.series) return {};
     return parsedData.series.reduce((acc, series, index) => {
-      acc[series.dataKey] = {
+      const key = `${plotId}-${series.dataKey}-${index}`;
+      acc[key] = {
         label: series.dataKey,
         color: series.color || COLORS[index % COLORS.length]
       };
       return acc;
     }, {} as Record<string, { label: string; color: string }>);
-  }, [parsedData?.series]);
+  }, [parsedData?.series, plotId]);
+
 
   if (!parsedData?.data || !parsedData?.series) {
     return (
@@ -154,197 +178,227 @@ export const Plot: React.FC<PlotProps> = ({ data, layout, className, id }) => {
   const { margin = { top: 20, right: 30, left: 20, bottom: 30 } } = parsedLayout;
 
   const renderChart = () => {
-    switch (parsedData.chartType) {
-      case 'bar':
-        return (
-          <BarChart data={parsedData.data} margin={margin}>
-            {parsedLayout.showGrid !== false && (
-              <CartesianGrid 
-                vertical={false} 
-                className="stroke-muted" 
-                strokeDasharray="3 3" 
+    const chartContent = () => {
+      switch (parsedData.chartType) {
+        case 'bar':
+          return (
+            <BarChart data={parsedData.data} margin={margin}>
+              {parsedLayout.showGrid !== false && (
+                <CartesianGrid 
+                  vertical={false} 
+                  className="stroke-muted" 
+                  strokeDasharray="3 3" 
+                />
+              )}
+              <XAxis
+                dataKey="x"
+                label={parsedLayout.xAxisLabel ? {
+                  value: parsedLayout.xAxisLabel,
+                  position: 'bottom'
+                } : undefined}
+                tickLine={false}
+                axisLine={false}
+                className="text-muted-foreground text-xs"
+                tick={{ fontSize: 12 }}
               />
-            )}
-            <XAxis
-              dataKey="x"
-              label={parsedLayout.xAxisLabel ? {
-                value: parsedLayout.xAxisLabel,
-                position: 'bottom'
-              } : undefined}
-              tickLine={false}
-              axisLine={false}
-              className="text-muted-foreground"
-            />
-            <YAxis
-              label={parsedLayout.yAxisLabel ? {
-                value: parsedLayout.yAxisLabel,
-                angle: -90,
-                position: 'insideLeft'
-              } : undefined}
-              tickLine={false}
-              axisLine={false}
-              className="text-muted-foreground"
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            {parsedLayout.showLegend !== false && (
-              <ChartLegend content={<ChartLegendContent />} />
-            )}
-            {parsedData.series.map((series: SeriesConfig, index: number) => (
-              <Bar
-                key={`${plotId}-${series.dataKey}`}
-                dataKey={series.dataKey}
-                fill={`var(--color-${series.dataKey})`}
-                radius={4}
-                name={series.dataKey} // Add name for legend identification
+              <YAxis
+                label={parsedLayout.yAxisLabel ? {
+                  value: parsedLayout.yAxisLabel,
+                  angle: -90,
+                  position: 'insideLeft'
+                } : undefined}
+                tickLine={false}
+                axisLine={false}
+                className="text-muted-foreground text-xs"
+                tick={{ fontSize: 12 }}
               />
-            ))}
-          </BarChart>
-        );
-
-      case 'pie':
-        return (
-          <PieChart margin={margin}>
-            {parsedData.series.map((series: SeriesConfig, index: number) => (
-              <Pie
-                key={`${plotId}-${series.dataKey}`}
-                data={parsedData.data}
-                dataKey={series.dataKey}
-                nameKey="x"
-                cx="50%"
-                cy="50%"
-                innerRadius={parsedLayout.pieConfig?.innerRadius || 0}
-                outerRadius={parsedLayout.pieConfig?.outerRadius || '80%'}
-                label
-                name={series.dataKey} // Add name for legend identification
-              >
-                {parsedData.data.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={COLORS[index % COLORS.length]} 
+              <ChartTooltip content={<ChartTooltipContent />} />
+              {parsedLayout.showLegend !== false && (
+                <ChartLegend content={<ChartLegendContent />} />
+              )}
+              {parsedData.series.map((series: SeriesConfig, index: number) => {
+                const key = `${plotId}-${series.dataKey}-${index}`;
+                return (
+                  <Bar
+                    key={key}
+                    dataKey={series.dataKey}
+                    fill={`var(--color-${key})`}
+                    radius={4}
+                    name={series.dataKey}
                   />
-                ))}
-              </Pie>
-            ))}
-            <ChartTooltip content={<ChartTooltipContent />} />
-            {parsedLayout.showLegend !== false && (
-              <ChartLegend content={<ChartLegendContent />} />
-            )}
-          </PieChart>
-        );
+                );
+              })}
+            </BarChart>
+          );
+  
+        case 'pie':
+          return (
+            <PieChart margin={margin}>
+              {parsedData.series.map((series: SeriesConfig, index: number) => {
+                const key = `${plotId}-${series.dataKey}-${index}`;
+                return (
+                  <Pie
+                    key={key}
+                    data={parsedData.data}
+                    dataKey={series.dataKey}
+                    nameKey="x"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={parsedLayout.pieConfig?.innerRadius || 0}
+                    outerRadius={parsedLayout.pieConfig?.outerRadius || '80%'}
+                    label={{ fontSize: 12 }}
+                    name={series.dataKey}
+                  >
+                    {parsedData.data.map((_, cellIndex) => (
+                      <Cell 
+                        key={`${key}-cell-${cellIndex}`} 
+                        fill={COLORS[cellIndex % COLORS.length]} 
+                      />
+                    ))}
+                  </Pie>
+                );
+              })}
+              <ChartTooltip content={<ChartTooltipContent />} />
+              {parsedLayout.showLegend !== false && (
+                <ChartLegend content={<ChartLegendContent />} />
+              )}
+            </PieChart>
+          );
+  
+        case 'scatter':
+          return (
+            <ScatterChart margin={margin}>
+              {parsedLayout.showGrid !== false && (
+                <CartesianGrid 
+                  vertical={false} 
+                  className="stroke-muted" 
+                  strokeDasharray="3 3" 
+                />
+              )}
+              <XAxis
+                dataKey="x"
+                type="number"
+                label={parsedLayout.xAxisLabel ? {
+                  value: parsedLayout.xAxisLabel,
+                  position: 'bottom'
+                } : undefined}
+                tickLine={false}
+                axisLine={false}
+                className="text-muted-foreground text-xs"
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis
+                dataKey="y"
+                type="number"
+                label={parsedLayout.yAxisLabel ? {
+                  value: parsedLayout.yAxisLabel,
+                  angle: -90,
+                  position: 'insideLeft'
+                } : undefined}
+                tickLine={false}
+                axisLine={false}
+                className="text-muted-foreground text-xs"
+                tick={{ fontSize: 12 }}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              {parsedLayout.showLegend !== false && (
+                <ChartLegend content={<ChartLegendContent />} />
+              )}
+              {parsedData.series.map((series: SeriesConfig, index: number) => {
+                const key = `${plotId}-${series.dataKey}-${index}`;
+                return (
+                  <Scatter
+                    key={key}
+                    data={parsedData.data}
+                    fill={`var(--color-${key})`}
+                    name={series.dataKey}
+                  />
+                );
+              })}
+            </ScatterChart>
+          );
+  
+        case 'line':
+        default:
+          return (
+            <LineChart data={parsedData.data} margin={margin}>
+              {parsedLayout.showGrid !== false && (
+                <CartesianGrid 
+                  vertical={false} 
+                  className="stroke-muted" 
+                  strokeDasharray="3 3" 
+                />
+              )}
+              <XAxis
+                dataKey="x"
+                label={parsedLayout.xAxisLabel ? {
+                  value: parsedLayout.xAxisLabel,
+                  position: 'bottom'
+                } : undefined}
+                tickLine={false}
+                axisLine={false}
+                className="text-muted-foreground text-xs"
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis
+                label={parsedLayout.yAxisLabel ? {
+                  value: parsedLayout.yAxisLabel,
+                  angle: -90,
+                  position: 'insideLeft'
+                } : undefined}
+                tickLine={false}
+                axisLine={false}
+                className="text-muted-foreground text-xs"
+                tick={{ fontSize: 12 }}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              {parsedLayout.showLegend !== false && (
+                <ChartLegend content={<ChartLegendContent />} />
+              )}
+              {parsedData.series.map((series: SeriesConfig, index: number) => {
+                const key = `${plotId}-${series.dataKey}-${index}`;
+                return (
+                  <Line
+                    key={key}
+                    type={series.type || "monotone"}
+                    dataKey={series.dataKey}
+                    stroke={`var(--color-${key})`}
+                    dot={false}
+                    name={series.dataKey}
+                  />
+                );
+              })}
+            </LineChart>
+          );
+      }
+    };
 
-      case 'scatter':
-        return (
-          <ScatterChart margin={margin}>
-            {parsedLayout.showGrid !== false && (
-              <CartesianGrid 
-                vertical={false} 
-                className="stroke-muted" 
-                strokeDasharray="3 3" 
-              />
-            )}
-            <XAxis
-              dataKey="x"
-              type="number"
-              label={parsedLayout.xAxisLabel ? {
-                value: parsedLayout.xAxisLabel,
-                position: 'bottom'
-              } : undefined}
-              tickLine={false}
-              axisLine={false}
-              className="text-muted-foreground"
-            />
-            <YAxis
-              dataKey="y"
-              type="number"
-              label={parsedLayout.yAxisLabel ? {
-                value: parsedLayout.yAxisLabel,
-                angle: -90,
-                position: 'insideLeft'
-              } : undefined}
-              tickLine={false}
-              axisLine={false}
-              className="text-muted-foreground"
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            {parsedLayout.showLegend !== false && (
-              <ChartLegend content={<ChartLegendContent />} />
-            )}
-            {parsedData.series.map((series: SeriesConfig, index: number) => (
-              <Scatter
-                key={`${plotId}-${series.dataKey}`}
-                data={parsedData.data}
-                fill={`var(--color-${series.dataKey})`}
-                name={series.dataKey} // Add name for legend identification
-              />
-            ))}
-          </ScatterChart>
-        );
-
-      case 'line':
-      default:
-        return (
-          <LineChart data={parsedData.data} margin={margin}>
-            {parsedLayout.showGrid !== false && (
-              <CartesianGrid 
-                vertical={false} 
-                className="stroke-muted" 
-                strokeDasharray="3 3" 
-              />
-            )}
-            <XAxis
-              dataKey="x"
-              label={parsedLayout.xAxisLabel ? {
-                value: parsedLayout.xAxisLabel,
-                position: 'bottom'
-              } : undefined}
-              tickLine={false}
-              axisLine={false}
-              className="text-muted-foreground"
-            />
-            <YAxis
-              label={parsedLayout.yAxisLabel ? {
-                value: parsedLayout.yAxisLabel,
-                angle: -90,
-                position: 'insideLeft'
-              } : undefined}
-              tickLine={false}
-              axisLine={false}
-              className="text-muted-foreground"
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            {parsedLayout.showLegend !== false && (
-              <ChartLegend content={<ChartLegendContent />} />
-            )}
-            {parsedData.series.map((series: SeriesConfig, index: number) => (
-              <Line
-                key={`${plotId}-${series.dataKey}`}
-                type={series.type || "monotone"}
-                dataKey={series.dataKey}
-                stroke={`var(--color-${series.dataKey})`}
-                dot={false}
-                name={series.dataKey} // Add name for legend identification
-              />
-            ))}
-          </LineChart>
-        );
-    }
+    return (
+      <ResponsiveContainer height="100%" aspect={1}>
+        {chartContent()}
+      </ResponsiveContainer>
+    );
   };
 
   return (
-<Card className={cn("w-full", className)} id={plotId}>
-  {parsedLayout.title && (
-    <CardHeader className="p-4 sm:p-6">
-      <CardTitle className="text-base sm:text-lg">{parsedLayout.title}</CardTitle>
-    </CardHeader>
-  )}
-  <CardContent className="p-2 sm:p-6">
-    <figure className="w-full aspect-[4/3] sm:aspect-[16/9] min-h-[200px]">
-      <ChartContainer config={chartConfig} className="w-full h-full">
-        {renderChart()}
-      </ChartContainer>
-    </figure>
-  </CardContent>
-</Card>
+    <Card className={cn("w-full max-w-lg mx-auto", className)} id={plotId}>
+      {parsedLayout.title && (
+        <CardHeader className="p-2 sm:p-4">
+          <CardTitle className="text-sm sm:text-base">{parsedLayout.title}</CardTitle>
+        </CardHeader>
+      )}
+      <CardContent className="p-2 sm:p-4">
+        <div ref={containerRef} className="w-full" style={{ height: containerHeight }}>
+          {containerWidth > 0 && containerHeight > 0 && (
+            <ChartContainer config={chartConfig} className="w-full h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                {renderChart()}
+              </ResponsiveContainer>
+            </ChartContainer>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

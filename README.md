@@ -4,7 +4,7 @@ https://em.sunholo.com/
 
 Emissary is an AI assisted messenger service that can be used to create an Emissary to speak on your behalf.
 
-Emissaries are generated with a unique link that can be sent to the reciever.  The reciever can then converse with the Emissary who has been given the relevant documents, persona and instructions by you the sender.  Recievers can then reply to you or the Emissary.
+Emissaries are generated with a unique link that can be sent to the receiver. The receiver can then converse with the Emissary who has been given the relevant documents, persona and instructions by you the sender. Receivers can then reply to you or the Emissary.
 
 ![](docs/img/emissary-screenshot.png)
 
@@ -87,6 +87,7 @@ Should now be able to run the backend server on http://127.0.0.1:1956 via:
 
 ```sh
 # assuming in root
+cd backend
 uv run backend/app.py 
 ```
 

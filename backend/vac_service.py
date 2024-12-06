@@ -43,14 +43,20 @@ def first_impression(contents, instructions, trace=None):
         system_instruction=system_msg,
     )
 
-    response = model.generate_content(contents)
-    
-    gen.end(output=response.text)
+    msg = "Let me look at that and get back to you with more detail."
+    try:
+        response = model.generate_content(contents)
+        if response:
+            try:
+                msg = response.text
+            except Exception as e:
+                log.error(f"response.text not working for {response} - {str(e)}")
+    except Exception as e:
+        msg = f"Error in first_impression: {str(e)}"
 
-    if response:
-      return response.text
-    else:
-      return "No answer given"
+    gen.end(output=msg)
+    
+    return msg
 
 def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, **kwargs):
 
@@ -92,7 +98,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
 
     first_response = first_impression(contents, instructions=instructions, trace=trace)
     log.info(f"First response: {first_response}")
-    callback.on_llm_new_token(token=first_response)
+    callback.on_llm_new_token(token=f"{first_response}\n\n")
 
     model_dict = create_model(config, instructions=instructions, tools=tools, trace_id=trace_id)
     model = model_dict["model"]

@@ -1,6 +1,5 @@
 // src/types/index.ts
 import { FileText, Image as ImageIcon, FileSpreadsheet, FileCode, Video, Music, File } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 
 export type UserState = 'not-logged-in' | 'receiver' | 'admin';
 
@@ -51,7 +50,7 @@ export type ChatInterfaceProps = {
     botAvatar: string;
     recipientName: string;
     senderName: string;
-    userState: string;
+    userState: UserState;
     onInputChange: (value: string) => void;
     onSendMessage: () => void;
     onLogin: () => void;
@@ -71,7 +70,7 @@ export type ChatInterfaceProps = {
 
 export type DocumentSidebarProps = {
     documents: Document[];
-    userState: string;
+    userState: UserState;
     fileInputRef: React.RefObject<HTMLInputElement>;
     onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onDeleteDocument: (index: number) => void;
