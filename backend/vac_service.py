@@ -1,4 +1,5 @@
 from my_log import log, langfuse
+from tools.google_search import create_google_search_component_string
 from sunholo.utils import ConfigManager
 from sunholo.langfuse.prompts import load_prompt_from_yaml
 #from sunholo.invoke import AsyncTaskRunner
@@ -154,17 +155,30 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     }
     usage_metadata = {}
 
-    use_code_tool = None
+    use_tools = {}
     if tools:
-      use_code_tool = "code_execution" if "code_execution" in tools else None
-      log.info(f"{use_code_tool=} {tools=}")
+        # Initialize an empty dict for found tools
+        use_tools = {}
+        
+        # Add each tool with empty dict as value if it's present in tools
+        if "code_execution" in tools:
+            use_tools["code_execution"] = {}
+        
+        if "google_search_retrieval" in tools:
+            use_tools["google_search_retrieval"] = {}
+            
+        # If no tools were added, set back to None
+        if not use_tools:
+            use_tools = None
+            
+        log.info(f"{use_tools=}")
 
     if not chunks:
       log.info(f"Tokens {total_tokens} < {FREE_TOKEN_LIMIT} tokens so calling model")
       try:
         response: GenerateContentResponse = model.generate_content(contents, 
                                                                   stream=True, 
-                                                                  tools=use_code_tool)
+                                                                  tools=use_tools)
         for chunk in response:
             if chunk:
                 try:
@@ -176,6 +190,11 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
                     chunks += parsed_chunk
                 except ValueError as err:
                     log.error(f"Error generating chunk: {str(err)}")
+
+        if "google_search_retrieval" in tools:
+            google_search_component = create_google_search_component_string(response)
+            if google_search_component:
+                callback.on_llm_new_token(token=google_search_component)
         
         usage_metadata = response.usage_metadata
         usage["input"] = usage["input"] + usage_metadata.prompt_token_count

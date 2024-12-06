@@ -14,6 +14,7 @@ import type { CustomComponent } from '@/components/markdown/types';
 import type { RechartsPlotData, RechartsPlotLayout } from '@/components/markdown/Plot';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import GoogleDemo from "@/components/demos/GoogleDemo";
 import CodeExecutionDemo from '@/components/demos/CodeExecutionDemo';
 import NetworkGraphDemo from '@/components/demos/NetworkGraphDemo';
 
@@ -167,22 +168,15 @@ const AVAILABLE_TOOLS: Tool[] = [
     icon: Cpu,
     isPremium: false,
     demo: CodeExecutionDemo
-  },  
-  {
-    id: 'search',
-    name: 'Web Search',
-    description: 'Real-time web search access',
+ },
+ {
+    id: 'google_search_retrieval',
+    name: 'Google Web Search',
+    description: 'Real-time Google search access',
     category: 'Integration',
     icon: Search,
-    isPremium: true,
-    demo: () => (
-      <Alert>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span>Web Search API Connected</span>
-        </div>
-      </Alert>
-    )
+    isPremium: false,
+    demo: GoogleDemo
   },
   {
     id: 'api',
