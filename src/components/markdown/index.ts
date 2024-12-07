@@ -6,6 +6,7 @@ import { PreviewComponent } from './Preview';
 import { Tooltip } from './Tooltip';
 import type { CustomComponent } from './types';
 import { Pre } from './Pre';
+import { GoogleSearch } from './GoogleSearch';
 import NetworkGraph from './Network';
 
 
@@ -17,6 +18,7 @@ export * from './Alert';
 export * from './Preview';
 export * from './Tooltip';
 export * from './Pre';
+export * from './GoogleSearch';
 export * from './Network';
 
 // Register all components with both cases supported
@@ -29,6 +31,7 @@ export const markdownComponents: Record<string, CustomComponent> = {
   preview: PreviewComponent,
   tooltip: Tooltip,
   pre: Pre,
+  googlesearch: GoogleSearch,
   networkgraph: NetworkGraph,
 
   // Optional: PascalCase versions if you want to support both casings

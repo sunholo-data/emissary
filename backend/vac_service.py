@@ -1,4 +1,5 @@
 from my_log import log, langfuse
+from tools.google_search import create_google_search_component_string
 from sunholo.utils import ConfigManager
 from sunholo.langfuse.prompts import load_prompt_from_yaml
 #from sunholo.invoke import AsyncTaskRunner
@@ -11,6 +12,31 @@ import google.generativeai as genai
 from google.generativeai.types import GenerateContentResponse
 
 FREE_TOKEN_LIMIT = 128000
+
+def create_model_tools(tools):
+    model_tools =[]
+    if tools:
+    
+        if "google_search_retrieval" in tools:
+            model_tools.append(
+                genai.protos.Tool(
+                    google_search_retrieval = genai.protos.GoogleSearchRetrieval(
+                        genai.protos.DynamicRetrievalConfig(
+                        mode = genai.protos.DynamicRetrievalConfig.Mode.MODE_DYNAMIC,
+                        dynamic_threshold = 0.3,
+                        ),
+                    ),
+                ),
+            )
+
+        if "code_execution" in tools:
+            model_tools = "code_execution"
+
+        if "google_search_retrieval" in tools and "code_execution" in tools:
+            log.warning("Can't use google_search_retrieval and code_exeution in same call.")
+
+    log.info(f"{model_tools=}")
+    return model_tools
 
 # Helper async function to fetch document content
 async def fetch_document_content(documents):
@@ -44,6 +70,7 @@ def first_impression(contents, instructions, trace=None):
 
     msg = "Let me look at that and get back to you with more detail."
     try:
+        log.info(f"{contents=}")
         response = model.generate_content(contents)
         if response:
             try:
@@ -95,6 +122,7 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
         if ai:
             contents.append({"role":"model", "parts":[{"text": ai}]})
 
+    contents.append({"role": "user", "parts":[{"text": question}]})
     first_response = first_impression(contents, instructions=instructions, trace=trace)
     log.info(f"First response: {first_response}")
     callback.on_llm_new_token(token=f"{first_response}\n\n")
@@ -118,11 +146,14 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
         if doc_contents:
             contents.extend(doc_contents)
 
+    continue_prompt = ("Please continue expanding on your answer."
+                      f"Make sure you obey these instructions: {system_prompt}. "
+                       "Don't repeat yourself, but also make sure you are fully addressing my last message.")
     contents.append({"role":"model", "parts":[{"text": first_response}]})
-    contents.append({"role":"user", "parts":[{"text": f"Please continue expanding on your answer.  Make sure you don't repeat what has just been said. Make sure you obey these instructions: {system_prompt}" }]})
+    contents.append({"role":"user", "parts":[{"text": continue_prompt}]})
 
     span.end(output = contents)
-    log.info(f"{contents}")
+
     model_name = config.vacConfig("model") or "gemini-1.5-flash"
 
     gen = trace.generation(
@@ -154,17 +185,11 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     }
     usage_metadata = {}
 
-    use_code_tool = None
-    if tools:
-      use_code_tool = "code_execution" if "code_execution" in tools else None
-      log.info(f"{use_code_tool=} {tools=}")
-
     if not chunks:
       log.info(f"Tokens {total_tokens} < {FREE_TOKEN_LIMIT} tokens so calling model")
+
       try:
-        response: GenerateContentResponse = model.generate_content(contents, 
-                                                                  stream=True, 
-                                                                  tools=use_code_tool)
+        response: GenerateContentResponse = model.generate_content(contents, stream=True)
         for chunk in response:
             if chunk:
                 try:
@@ -176,6 +201,11 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
                     chunks += parsed_chunk
                 except ValueError as err:
                     log.error(f"Error generating chunk: {str(err)}")
+
+        if "google_search_retrieval" in tools:
+            google_search_component = create_google_search_component_string(response)
+            if google_search_component:
+                callback.on_llm_new_token(token=google_search_component)
         
         usage_metadata = response.usage_metadata
         usage["input"] = usage["input"] + usage_metadata.prompt_token_count
@@ -247,15 +277,18 @@ def create_model(config, instructions=None, tools=None, trace_id=None):
         for tool in tools
     }
 
+    log.info(f"prompts for tools: {prompts.keys()=}")
+
     prompts["system"] = load_prompt_from_yaml("system", prefix="emissary") or ""
 
     system_prompt = " ".join([instructions or ""] + [p for p in prompts.values() if p is not None])
 
-    log.info(f"{system_prompt=}")
+    model_tools = create_model_tools(tools)
     genai_model = genai.GenerativeModel(
         model_name=model or "gemini-1.5-flash",
          safety_settings=genai_safety(),
-         system_instruction=system_prompt
+         system_instruction=system_prompt,
+         tools=model_tools
     )
 
     system_tokens = genai_model.count_tokens([system_prompt])

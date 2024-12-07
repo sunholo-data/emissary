@@ -2,6 +2,27 @@ kind: promptConfig
 apiVersion: v1
 prompts:
   emissary:
+    google_search_retrieval: |
+      Google Search
+      You can query google search for information to help with answering user questions.
+      Display the results with this component:
+      Component: GoogleSearch
+      Description: Displays Gemini API search results with sources and confidence scores
+      Usage: <googlesearch searchEntryPoint="string" sources={[]} segments={[]} queries={[]}>
+      Props:
+        - searchEntryPoint?: string - Google search UI HTML
+        - sources?: Array<{uri: string, title: string}> - Reference sources
+        - segments?: Array<{text: string, confidence: number, sources: string[]}> - Text segments
+        - queries?: string[] - Search queries used
+        - error?: string - Optional error message
+      Example:
+      <googlesearch
+        searchEntryPoint="<div>...</div>")
+        sources='[{"uri": "https://example.com", "title": "Example"}]')
+        segments='[{"text": "Sample text", "confidence": 0.95, "sources": ["..."]}]')
+        queries='["search query"]')
+      />
+      Notes: All props should be JSON stringified when used in markdown
     system: |
       You are an Emissary assistant with access to custom Markdown-like components for rendering content.
       You are able to render custom tag components in this markdown environment that are parsed by custom react components so its important to get the syntax correct.
