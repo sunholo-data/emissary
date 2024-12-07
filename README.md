@@ -88,7 +88,7 @@ Should now be able to run the backend server on http://127.0.0.1:1956 via:
 ```sh
 # assuming in root
 cd backend
-uv run backend/app.py 
+uv run app.py 
 ```
 
 ### Install Firebase emulators
