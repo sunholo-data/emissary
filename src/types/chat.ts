@@ -1,5 +1,12 @@
 // src/types/chat.ts
 import type { ChatMessage, Document, EmissaryConfigState, UserState } from '@/types';
+import type { SelectedItem, FileBrowserButtonProps } from '@/types/file-browser';
+
+// Define the MessageContext type separately for reuse
+export interface MessageContext {
+  text: string;
+  selectedItems?: SelectedItem[];
+}
 
 export interface BaseChatProps {
   botMessages: ChatMessage[];
@@ -11,7 +18,7 @@ export interface BaseChatProps {
   senderName: string;
   userState: UserState;  // Updated to use specific type
   onInputChange: (value: string) => void;
-  onSendMessage: () => void;
+  onSendMessage: (messageContext: MessageContext) => void; 
   onLogin: () => void;
   isStreaming: boolean;
   error: string | null;
@@ -22,6 +29,7 @@ export interface BaseChatProps {
 interface ChatControlProps {
   activeChat: 'bot' | 'human';
   setActiveChat: (chat: 'bot' | 'human') => void;
+  tools?: string[];
 }
 
 export interface SplitChatProps extends BaseChatProps, ChatControlProps {}

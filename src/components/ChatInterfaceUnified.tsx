@@ -1,16 +1,14 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Send, LogIn } from 'lucide-react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import MessageContent from '@/components/MessageContent';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import RelativeTime from '@/components/RelativeTime';
 import type { ChatMessage } from '@/types';
-import type { UnifiedChatProps } from '@/types/chat';
+import type { UnifiedChatProps, MessageContext } from '@/types/chat';
 import { MessageControls } from '@/components/MessageControls';
 import { ChatInput } from '@/components/ChatInput';
+
 
 export default function UnifiedChatInterface({
   botMessages,
@@ -28,6 +26,7 @@ export default function UnifiedChatInterface({
   isStreaming,
   error,
   activeChat,
+  tools,
   footer
 }: UnifiedChatProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -142,6 +141,10 @@ export default function UnifiedChatInterface({
     });
   }, [userState, botAvatar, botName, senderName, recipientName]);
 
+  const handleSendMessage = (messageContext: MessageContext) => {
+    onSendMessage(messageContext);
+  };
+
   return (
     <div className="flex flex-col h-full bg-white">
       <ScrollArea className="flex-grow">
@@ -179,8 +182,9 @@ export default function UnifiedChatInterface({
           userState={userState}
           isStreaming={isStreaming}
           onInputChange={onInputChange}
-          onSendMessage={onSendMessage}
+          onSendMessage={handleSendMessage}  // Use our new handler
           onLogin={onLogin}
+          tools={tools}
         />
       </div>
     </div>

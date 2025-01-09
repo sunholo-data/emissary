@@ -19,18 +19,11 @@ def create_model_tools(tools):
     
         if "google_search_retrieval" in tools:
             model_tools.append(
-                genai.protos.Tool(
-                    google_search_retrieval = genai.protos.GoogleSearchRetrieval(
-                        genai.protos.DynamicRetrievalConfig(
-                        mode = genai.protos.DynamicRetrievalConfig.Mode.MODE_DYNAMIC,
-                        dynamic_threshold = 0.3,
-                        ),
-                    ),
-                ),
+                'google_search_retrieval'
             )
 
         if "code_execution" in tools:
-            model_tools = "code_execution"
+            model_tools.append("code_execution")
 
         if "google_search_retrieval" in tools and "code_execution" in tools:
             log.warning("Can't use google_search_retrieval and code_exeution in same call.")

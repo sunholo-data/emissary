@@ -60,7 +60,6 @@ export default function Emissary({
   const [activeChat, setActiveChat] = useState<'bot' | 'human'>('bot');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const currentMessageRef = useRef<string>('');
   const lastProcessedMessageRef = useRef<string | null>(null);
   const streamingContentRef = useRef<string>('');
   const previousContentLengthRef = useRef<number>(0);
@@ -309,6 +308,7 @@ return (
           error={error}
           activeChat={activeChat}
           setActiveChat={setActiveChat}
+          tools={tools} 
           footer={
             <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground">
               <span>Split</span>

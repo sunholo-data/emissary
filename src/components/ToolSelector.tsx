@@ -1,8 +1,9 @@
-import React from 'react';
+//src/components/ToolSelector.tsx
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Check, AlertCircle, Search, Code, LineChart, BrainCircuit, ChevronDown, ChevronUp } from 'lucide-react';
-import { Cpu, Terminal, Database, History, Globe, Network } from 'lucide-react';
+import { Cpu, Folder, Terminal, Database, History, Globe, Network } from 'lucide-react';
 import { FileIcon, FileText, Image as ImageIcon, Music, Video, File } from 'lucide-react';
 import { Alert } from '@/components/markdown/Alert';
 import { Highlight } from '@/components/markdown/Highlight';
@@ -17,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import GoogleDemo from "@/components/demos/GoogleDemo";
 import CodeExecutionDemo from '@/components/demos/CodeExecutionDemo';
 import NetworkGraphDemo from '@/components/demos/NetworkGraphDemo';
+import FileBrowserDemo from '@/components/demos/FileBrowserDemo';
+
 
 interface Tool {
   id: string;
@@ -25,7 +28,7 @@ interface Tool {
   category: string;
   icon: React.FC<{ className?: string }>;
   component?: CustomComponent;
-  demo: () => React.ReactNode;
+  demo: React.ComponentType;
   isPremium?: boolean; 
 }
 
@@ -304,6 +307,15 @@ const AVAILABLE_TOOLS: Tool[] = [
         </Alert>
       </div>
     )
+ },
+ {
+  id: 'file-browser',
+  name: 'File Browser',
+  description: 'Select files from cloud storage',
+  category: 'Integration',
+  icon: Folder,
+  isPremium: true,
+  demo: FileBrowserDemo
  }
 ];
 
@@ -339,7 +351,8 @@ export default function ToolSelector({
       filter === 'All' || tool.category === filter
     );
   
-    const activeDemo = AVAILABLE_TOOLS.find(tool => tool.id === activeDemoId)?.demo;
+    const ActiveDemo = AVAILABLE_TOOLS.find(tool => tool.id === activeDemoId)?.demo;
+
   
     return (
         <Card>
@@ -466,7 +479,7 @@ export default function ToolSelector({
                 <Card>
                     <ScrollArea className="h-[400px]">
                     <CardContent className="p-3">
-                        {activeDemo?.()}
+                      {ActiveDemo && <ActiveDemo />}
                     </CardContent>
                     </ScrollArea>
                 </Card>

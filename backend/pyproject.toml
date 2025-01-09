@@ -5,6 +5,9 @@ description = "Backend for the Emissary"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "google-generativeai>=0.7.2",
-    "sunholo[gcp,http]>=0.110.2",
+    "google-generativeai>=0.8.3",
+    "sunholo[gcp,http]>=0.115.2",
 ]
+
+[tool.uv.sources]
+sunholo = { git = "https://github.com/sunholo-data/sunholo-py" }
