@@ -14,6 +14,8 @@ import { useThrottledMessages } from '@/utils/throttle';
 import { UserState } from '@/types';
 import type { ChatInterfaceType } from '@/types/chat';
 import type { SelectedItem } from '@/types/file-browser';
+import { ToolProvider } from '@/contexts/ToolContext';  
+
 
 export type EmissaryProps = {
   senderName?: string;
@@ -31,6 +33,7 @@ export type EmissaryProps = {
   setShowLoginDialog: (show: boolean) => void;
   handleLogout: () => Promise<void>;
   tools?: string[];
+  toolConfigs?: Record<string, Record<string, any>>;
 };
 
 export default function Emissary({
@@ -46,7 +49,8 @@ export default function Emissary({
   currentUser,
   showLoginDialog,
   setShowLoginDialog,
-  tools = []
+  tools = [],
+  toolConfigs = {}
 }: EmissaryProps) {
   const [viewType, setViewType] = useState<ChatInterfaceType>('unified');
   const [botMessages, setBotMessages] = useState<ChatMessage[]>([{ 
@@ -76,7 +80,8 @@ export default function Emissary({
     adminEmail: '',
     initialMessage,
     initialInstructions,
-    tools
+    tools,
+    toolConfigs
   });
 
   const { toast } = useToast();
@@ -294,82 +299,84 @@ export default function Emissary({
   );
 
 return (
-  <div className="relative flex-1 overflow-hidden">
-    <div className="absolute inset-0">
-      {(() => {
-        const view = viewType as ChatInterfaceType;
-        return view === 'unified' ? (
-          <UnifiedChatInterface
-          botMessages={throttledBotMessages}
-          humanMessages={humanMessages}
-          input={input}
-          botName={botName}
-          botAvatar={botAvatar}
-          recipientName={recipientName}
-          senderName={senderName}
-          userState={userState}
-          onInputChange={setInput}
-          onSendMessage={handleSendMessage}
-          onLogin={() => setShowLoginDialog(true)}
-          isStreaming={isStreaming}
-          error={error}
-          activeChat={activeChat}
-          setActiveChat={setActiveChat}
-          tools={tools}
-          selectedItems={selectedItems}
-          onFileSelection={handleFileSelection}      
-          footer={
-            <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground">
-              <span>Split</span>
-              <Switch
-                checked={viewType === 'unified'}
-                onCheckedChange={handleViewChange}
-                className="scale-75"
-              />
-              <span>Unified</span>
-            </div>
-          }
-          />
-        ) : (
-          <ChatInterfaceSplit
-            botMessages={throttledBotMessages}
-            humanMessages={renderHumanMessages()}
-            input={input}
-            activeChat={activeChat}
-            botName={botName}
-            botAvatar={botAvatar}
-            recipientName={recipientName}
-            senderName={senderName}
-            userState={userState}
-            onInputChange={setInput}
-            onSendMessage={handleSendMessage}
-            onLogin={() => setShowLoginDialog(true)}
-            setActiveChat={setActiveChat}
-            tools={tools}
-            selectedItems={selectedItems}
-            onFileSelection={handleFileSelection}        
-            isStreaming={isStreaming}
-            error={error}
-            footer={
-              <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground">
-                <span>Split</span>
-                <Switch
-                  checked={viewType === 'unified'}
-                  onCheckedChange={handleViewChange}
-                  className="scale-75"
-                />
-                <span>Unified</span>
-              </div>
-            }
-          />
-        );
-      })()}
-    </div>
+  <ToolProvider toolConfigs={config.toolConfigs || {}}>
+    <div className="relative flex-1 overflow-hidden">
+      <div className="absolute inset-0">
+        {(() => {
+          const view = viewType as ChatInterfaceType;
+          return view === 'unified' ? (
+            <UnifiedChatInterface
+              botMessages={throttledBotMessages}
+              humanMessages={humanMessages}
+              input={input}
+              botName={botName}
+              botAvatar={botAvatar}
+              recipientName={recipientName}
+              senderName={senderName}
+              userState={userState}
+              onInputChange={setInput}
+              onSendMessage={handleSendMessage}
+              onLogin={() => setShowLoginDialog(true)}
+              isStreaming={isStreaming}
+              error={error}
+              activeChat={activeChat}
+              setActiveChat={setActiveChat}
+              tools={tools}
+              selectedItems={selectedItems}
+              onFileSelection={handleFileSelection}      
+              footer={
+                <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground">
+                  <span>Split</span>
+                  <Switch
+                    checked={viewType === 'unified'}
+                    onCheckedChange={handleViewChange}
+                    className="scale-75"
+                  />
+                  <span>Unified</span>
+                </div>
+              }
+            />
+          ) : (
+            <ChatInterfaceSplit
+              botMessages={throttledBotMessages}
+              humanMessages={renderHumanMessages()}
+              input={input}
+              activeChat={activeChat}
+              botName={botName}
+              botAvatar={botAvatar}
+              recipientName={recipientName}
+              senderName={senderName}
+              userState={userState}
+              onInputChange={setInput}
+              onSendMessage={handleSendMessage}
+              onLogin={() => setShowLoginDialog(true)}
+              setActiveChat={setActiveChat}
+              tools={tools}
+              selectedItems={selectedItems}
+              onFileSelection={handleFileSelection}        
+              isStreaming={isStreaming}
+              error={error}
+              footer={
+                <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground">
+                  <span>Split</span>
+                  <Switch
+                    checked={viewType === 'unified'}
+                    onCheckedChange={handleViewChange}
+                    className="scale-75"
+                  />
+                  <span>Unified</span>
+                </div>
+              }
+            />
+          );
+        })()}
+      </div>
 
-    <LoginDialog 
-      open={showLoginDialog} 
-      onOpenChange={setShowLoginDialog} 
-    />
-  </div>
+      <LoginDialog 
+        open={showLoginDialog} 
+        onOpenChange={setShowLoginDialog} 
+      />
+    </div>
+  </ToolProvider>
 );
 }

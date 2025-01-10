@@ -32,6 +32,7 @@ export default function SharePage({ config }: SharePageProps) {
     adminEmail,
     initialDocuments,
     tools,
+    toolConfigs,
     shareId 
   } = useMemo(() => config, [config]);
 
@@ -73,6 +74,7 @@ export default function SharePage({ config }: SharePageProps) {
     initialMessage,
     initialInstructions,
     tools,
+    toolConfigs,
     shareId 
   }), [
     userState, 
@@ -88,6 +90,7 @@ export default function SharePage({ config }: SharePageProps) {
     initialMessage,
     initialInstructions,
     tools,
+    toolConfigs,
     shareId 
   ]);
 

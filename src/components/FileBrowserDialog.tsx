@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Folder, File, ChevronDown, ChevronRight } from 'lucide-react';
+import { Folder, File, ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Alert } from '@/components/ui/alert';
 import type { FileSystemItem, FileBrowserDialogProps } from '@/types/file-browser';
+import { useToolContext } from '@/contexts/ToolContext';
 
 // This would come from your cloud storage
 const mockFileSystem: FileSystemItem = {
@@ -30,7 +32,60 @@ export function FileBrowserDialog({
   onSelect,
   selectedItems = []
 }: FileBrowserDialogProps) {
+  const { toolConfigs } = useToolContext();
+  const fileConfig = toolConfigs['file-browser'] || {};
+  const bucketUrl = fileConfig.bucketUrl;
+  const rootPath = fileConfig.rootPath || '/';
+
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [fileSystem, setFileSystem] = useState<FileSystemItem>(mockFileSystem);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open && bucketUrl) {
+      loadFileSystem();
+    }
+  }, [open, bucketUrl, rootPath]);
+
+  const loadFileSystem = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Here you would implement the actual file system loading logic
+      // using bucketUrl and rootPath
+      setFileSystem(mockFileSystem);
+    } catch (err) {
+      setError('Failed to load file system');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // If configuration is missing, show a configuration alert
+  if (!bucketUrl) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>File Browser Configuration Required</DialogTitle>
+          </DialogHeader>
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <span>Please configure the file browser in the admin settings first.</span>
+          </Alert>
+          <div className="text-sm text-muted-foreground">
+            Configuration required:
+            <ul className="list-disc ml-4 mt-2">
+              <li>Storage Bucket URL</li>
+              <li>Root Path (optional)</li>
+            </ul>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const toggleFolder = (path: string) => {
     setExpandedFolders(prev => ({
@@ -110,6 +165,11 @@ export function FileBrowserDialog({
           <DialogTitle>Select Files or Folders</DialogTitle>
         </DialogHeader>
         
+        {/* Current location indicator */}
+        <div className="text-sm text-muted-foreground">
+          Current location: {bucketUrl}{rootPath}
+        </div>
+
         {/* Selected Items */}
         {selectedItems.length > 0 && (
           <div className="flex flex-wrap gap-1 p-2 bg-gray-50 rounded">
@@ -138,7 +198,18 @@ export function FileBrowserDialog({
 
         <ScrollArea className="h-[400px] border rounded-lg">
           <div className="p-4">
-            {renderFileSystem(mockFileSystem)}
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                Loading...
+              </div>
+            ) : error ? (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <span>{error}</span>
+              </Alert>
+            ) : (
+              renderFileSystem(fileSystem)
+            )}
           </div>
         </ScrollArea>
 
