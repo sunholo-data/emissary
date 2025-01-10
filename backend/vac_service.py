@@ -14,19 +14,17 @@ from google.generativeai.types import GenerateContentResponse
 FREE_TOKEN_LIMIT = 128000
 
 def create_model_tools(tools):
-    model_tools =[]
+    model_tools ={}
     if tools:
     
         if "google_search_retrieval" in tools:
-            model_tools.append(
-                'google_search_retrieval'
-            )
+            model_tools["google_search_retrieval"] = {}
 
         if "code_execution" in tools:
-            model_tools.append("code_execution")
+            model_tools["code_execution"] = {}
 
         if "google_search_retrieval" in tools and "code_execution" in tools:
-            log.warning("Can't use google_search_retrieval and code_exeution in same call.")
+            log.warning("Can't use google_search_retrieval and code_exeution in same call(?)")
 
     log.info(f"{model_tools=}")
     return model_tools
@@ -94,8 +92,10 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     humanChatHistory = kwargs.get('humanChatHistory')
     emissaryConfig = kwargs.get('emissaryConfig')
     tools = []
+    toolConfigs = {}
     if emissaryConfig is not None:
         tools = emissaryConfig.get('tools')
+        toolConfigs = emissaryConfig.get('toolConfigs')
 
     contents = []
     
@@ -115,7 +115,12 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
         if ai:
             contents.append({"role":"model", "parts":[{"text": ai}]})
 
-    contents.append({"role": "user", "parts":[{"text": question}]})
+    contents.append({"role": "user", 
+                     "parts":[
+                            {"text": f"{question} - you also have access to these tools: {tools} with these configurations: {toolConfigs}"}
+                         ]
+                    })
+
     first_response = first_impression(contents, instructions=instructions, trace=trace)
     log.info(f"First response: {first_response}")
     callback.on_llm_new_token(token=f"{first_response}\n\n")

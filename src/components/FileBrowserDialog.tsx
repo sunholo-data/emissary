@@ -8,13 +8,6 @@ import { Alert } from '@/components/ui/alert';
 import type { FileSystemItem, FileBrowserDialogProps } from '@/types/file-browser';
 import { useToolContext } from '@/contexts/ToolContext';
 import { format } from 'date-fns';
-import { InfoIcon } from 'lucide-react';
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 
 interface GCSObject {
     name: string;

@@ -15,10 +15,12 @@ def create_google_search_component_string(gemini_response: GenerateContentRespon
     Returns:
         str: A string representation of the React component with props
     """
+    log.info(f"{gemini_response=}")
     try:
         # Extract the first candidate's content and metadata
-        candidate = gemini_response['candidates'][0]
-        grounding_metadata = candidate.get('groundingMetadata', {})
+        candidate = gemini_response.candidates[0]
+        grounding_metadata = getattr(candidate, 'grounding_metadata', {})
+
         if not grounding_metadata:
             log.info("No grounding metadata found")
             return ''
