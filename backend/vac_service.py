@@ -14,11 +14,20 @@ from google.generativeai.types import GenerateContentResponse
 FREE_TOKEN_LIMIT = 128000
 
 def create_model_tools(tools):
-    model_tools ={}
+    model_tools =[]
     if tools:
     
         if "google_search_retrieval" in tools:
-            model_tools["google_search_retrieval"] = {}
+            model_tools.append(
+                genai.protos.Tool(
+                    google_search_retrieval = genai.protos.GoogleSearchRetrieval(
+                        dynamic_retrieval_config = genai.protos.DynamicRetrievalConfig(
+                        mode = genai.protos.DynamicRetrievalConfig.Mode.MODE_DYNAMIC,
+                        dynamic_threshold = 0.3,
+                        ),
+                    ),
+                ),
+            )
 
         if "code_execution" in tools:
             model_tools["code_execution"] = {}
