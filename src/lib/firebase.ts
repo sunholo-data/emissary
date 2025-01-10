@@ -340,22 +340,6 @@ static async updateWelcomeBot(config: any) {
   }, { merge: true });
 }
 
-  static async getConfigForUser(userId: string, shareId: string): Promise<ConfigProps> {
-    if (typeof window === 'undefined') throw new Error('This method can only be used in the browser');
-    try {
-      // Use getCompleteShareConfig instead of direct access
-      const completeConfig = await this.getCompleteShareConfig(userId, shareId);
-      if (!completeConfig) {
-        throw new Error('Configuration not found');
-      }
-      
-      return this.toConfigProps(completeConfig.share, completeConfig.bot);
-    } catch (error: any) {
-      this.handleError(error, 'Getting config');
-      throw error;
-    }
-  }
-
   static async createBotConfig(botConfig: Omit<BotConfig, 'botId' | 'createdAt' | 'updatedAt'>): Promise<string> {
     if (typeof window === 'undefined') throw new Error('This method can only be used in the browser');
     try {
@@ -515,7 +499,8 @@ static async updateWelcomeBot(config: any) {
       initialMessage: share.initialMessage || bot.defaultMessage,
       initialInstructions: share.initialInstructions || bot.defaultInstructions,
       shareId: share.shareId,
-      tools: share.tools || []
+      tools: share.tools || [],
+      toolConfigs: share.toolConfigs || {},
     };
   }
 
@@ -607,6 +592,7 @@ static async updateWelcomeBot(config: any) {
             initialInstructions: shareData.initialInstructions || botConfig.defaultInstructions,
             initialDocuments: initialDocuments,
             tools: shareData.tools || [], 
+            toolConfigs: shareData.toolConfigs || {},
             createdAt: new Date(shareData.metadata.createdAt),
             updatedAt: new Date(shareData.metadata.updatedAt),
             shareUrl: `${window.location.origin}/${userId}/${shareData.shareId}`,

@@ -76,6 +76,8 @@ service cloud.firestore {
       // Allow creating with proper structure
       allow create: if isAuthenticated();
       
+      allow update: if isAuthenticated() && isShareAdmin(chatId) && isValidChatDocument();
+
       match /messages/{messageId} {
         // Allow reading all messages
         allow read: if true;

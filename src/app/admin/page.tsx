@@ -192,6 +192,7 @@ export default function AdminPage() {
       ...bot,
       botId: bot.botId,
       tools: bot.tools || [], 
+      toolConfigs: bot.toolConfigs || {},
       // Ensure we have a valid Document array
       initialDocuments: (bot.initialDocuments || []).filter((doc): doc is Document => doc !== undefined)
     });
@@ -502,6 +503,7 @@ const handleDuplicateBot = async (bot: UserBot) => {
           initialMessage: bot.initialMessage,
           initialInstructions: bot.initialInstructions,
           tools: config.tools || [],
+          toolConfigs: config.toolConfigs || {},
           initialDocuments: [] // Start with empty documents, they'll be copied next
       };
 
@@ -791,11 +793,19 @@ return (
                 <Label>Tools & Features</Label>
                 <ToolSelector 
                   selectedTools={config.tools || []}
-                  toolConfigs={config.toolConfigs}
+                  toolConfigs={config.toolConfigs || {}} // Add default empty object
                   onConfigChange={handleToolConfigChange}
                   onChange={(tools) => setConfig(prev => ({
                     ...prev,
-                    tools
+                    tools,
+                    toolConfigs: {
+                      ...(prev.toolConfigs || {}),
+                      // Remove configs for tools that are no longer selected
+                      ...Object.fromEntries(
+                        Object.entries(prev.toolConfigs || {})
+                          .filter(([toolId]) => tools.includes(toolId))
+                      )
+                    }
                   }))}
                 />
               </div>
