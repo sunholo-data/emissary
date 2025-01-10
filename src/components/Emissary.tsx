@@ -13,6 +13,7 @@ import { vacChat } from '@/utils/vacChat';
 import { useThrottledMessages } from '@/utils/throttle';
 import { UserState } from '@/types';
 import type { ChatInterfaceType } from '@/types/chat';
+import type { SelectedItem } from '@/types/file-browser';
 
 export type EmissaryProps = {
   senderName?: string;
@@ -55,6 +56,7 @@ export default function Emissary({
     userName: botName,
     photoURL: botAvatar
   }]);
+  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [humanMessages, setHumanMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [activeChat, setActiveChat] = useState<'bot' | 'human'>('bot');
@@ -81,6 +83,10 @@ export default function Emissary({
 
   const handleViewChange = (checked: boolean) => {
     setViewType(checked ? 'unified' : 'split');
+  };
+
+  const handleFileSelection = (items: SelectedItem[]) => {
+    setSelectedItems(items);
   };
 
   // Update config when shareId or user changes
@@ -222,6 +228,7 @@ export default function Emissary({
       
       setBotMessages(prev => [...prev, userMessage]);
       setInput('');
+      setSelectedItems([]);
       
       // Start streaming with slight delay to ensure user message renders
       setTimeout(async () => {
@@ -308,7 +315,9 @@ return (
           error={error}
           activeChat={activeChat}
           setActiveChat={setActiveChat}
-          tools={tools} 
+          tools={tools}
+          selectedItems={selectedItems}
+          onFileSelection={handleFileSelection}      
           footer={
             <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground">
               <span>Split</span>
@@ -336,6 +345,9 @@ return (
             onSendMessage={handleSendMessage}
             onLogin={() => setShowLoginDialog(true)}
             setActiveChat={setActiveChat}
+            tools={tools}
+            selectedItems={selectedItems}
+            onFileSelection={handleFileSelection}        
             isStreaming={isStreaming}
             error={error}
             footer={

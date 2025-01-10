@@ -1,5 +1,4 @@
 // src/components/ChatInput.tsx
-import { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, LogIn } from 'lucide-react';
@@ -22,6 +21,8 @@ interface ChatInputProps {
   onSendMessage: (messageContext: MessageContext) => void;
   onLogin: () => void;
   tools?: string[];  
+  selectedItems?: SelectedItem[];
+  onItemsSelected?: (items: SelectedItem[]) => void;
 }
 
 export function ChatInput({
@@ -35,9 +36,10 @@ export function ChatInput({
   onInputChange,
   onSendMessage,
   onLogin,
-  tools = []
+  tools = [],
+  selectedItems = [],
+  onItemsSelected = () => {}, 
 }: ChatInputProps) {
-  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const showFileBrowser = tools.includes('file-browser');
 
   const handleSend = () => {
@@ -45,7 +47,6 @@ export function ChatInput({
       text: input,
       selectedItems: selectedItems
     });
-    setSelectedItems([]); // Clear selections after sending
   };
 
   // Prevent default zoom behavior on input focus for iOS
@@ -96,8 +97,8 @@ export function ChatInput({
               {item.name}
               <span 
                 className="ml-1 cursor-pointer hover:text-gray-700"
-                onClick={() => setSelectedItems(prev => 
-                  prev.filter(i => i.path !== item.path)
+                onClick={() => onItemsSelected?.(
+                  selectedItems?.filter(i => i.path !== item.path) || []
                 )}
               >
                 ×
@@ -110,9 +111,9 @@ export function ChatInput({
       <div className="flex space-x-2">
         {showFileBrowser && (
           <FileBrowserButton
-            onItemsSelected={setSelectedItems}
-            selectedItems={selectedItems}
-          />
+          onItemsSelected={onItemsSelected}
+          selectedItems={selectedItems}
+        />
         )}
         <Input
           className="text-base"

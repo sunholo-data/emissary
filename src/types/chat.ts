@@ -32,10 +32,14 @@ interface ChatControlProps {
   tools?: string[];
 }
 
-export interface SplitChatProps extends BaseChatProps, ChatControlProps {}
-
+export interface SplitChatProps extends BaseChatProps, ChatControlProps {
+  selectedItems: SelectedItem[];
+  onFileSelection: (items: SelectedItem[]) => void;
+}
 // UnifiedChatProps now also includes the chat controls
-export interface UnifiedChatProps extends BaseChatProps, ChatControlProps {}
-
+export interface UnifiedChatProps extends BaseChatProps, ChatControlProps {
+  selectedItems: SelectedItem[];
+  onFileSelection: (items: SelectedItem[]) => void;
+}
 // If you need a way to distinguish between them in code:
 export type ChatInterfaceType = 'unified' | 'split';

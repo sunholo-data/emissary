@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import MessageContent from '@/components/MessageContent';
 import type { ChatMessage } from '@/types';
+import type { MessageContext } from '@/types/chat'; 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import RelativeTime from '@/components/RelativeTime';
 import type { SplitChatProps } from '@/types/chat';
@@ -26,7 +27,10 @@ export default function ChatInterfaceSplit({
   setActiveChat,
   isStreaming,
   error,
-  footer
+  footer,
+  tools,
+  selectedItems,
+  onFileSelection   
 }: SplitChatProps) {
   const botScrollAreaRef = useRef<HTMLDivElement>(null);
   const humanScrollAreaRef = useRef<HTMLDivElement>(null);
@@ -35,6 +39,10 @@ export default function ChatInterfaceSplit({
     if (ref.current) {
       ref.current.scrollIntoView(false);
     }
+  };
+
+  const handleSendMessage = (messageContext: MessageContext) => {
+    onSendMessage(messageContext);
   };
 
   useEffect(() => {
@@ -215,8 +223,11 @@ export default function ChatInterfaceSplit({
           userState={userState}
           isStreaming={isStreaming}
           onInputChange={onInputChange}
-          onSendMessage={onSendMessage}
+          onSendMessage={handleSendMessage}
           onLogin={onLogin}
+          tools={tools}
+          selectedItems={selectedItems}
+          onItemsSelected={onFileSelection}
         />
       </div>
     </Tabs>

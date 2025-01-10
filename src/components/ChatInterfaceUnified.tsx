@@ -27,6 +27,8 @@ export default function UnifiedChatInterface({
   error,
   activeChat,
   tools,
+  selectedItems,
+  onFileSelection,
   footer
 }: UnifiedChatProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -185,6 +187,8 @@ export default function UnifiedChatInterface({
           onSendMessage={handleSendMessage}  // Use our new handler
           onLogin={onLogin}
           tools={tools}
+          selectedItems={selectedItems}
+          onItemsSelected={onFileSelection}
         />
       </div>
     </div>
