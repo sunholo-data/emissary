@@ -88,6 +88,7 @@ export interface BaseConfigProps {
   initialMessage?: string;
   initialInstructions?: string;
   tools?: string[]; 
+  toolConfigs?: Record<string, Record<string, any>>;
 }
 
 // Full config type that includes shareId - used for the final/complete config
@@ -133,6 +134,7 @@ export interface ShareConfig {
   initialInstructions?: string;
   metadata: ShareMetadata;
   tools?: string[]; 
+  toolConfigs?: Record<string, Record<string, any>>;
 }
 
 

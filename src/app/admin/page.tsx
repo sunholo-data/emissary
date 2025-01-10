@@ -28,9 +28,13 @@ export default function AdminPage() {
     const [selectedTemplate, setSelectedTemplate] = useState<string>('');
     const [availableTemplates, setAvailableTemplates] = useState<BotConfig[]>([]);
     const [userBots, setUserBots] = useState<UserBot[]>([]);
-    const [config, setConfig] = useState<Partial<ConfigProps & { botId: string }>>({
+    const [config, setConfig] = useState<Partial<ConfigProps & { 
+      botId: string;
+      toolConfigs?: Record<string, Record<string, any>>; // Add this
+    }>>({
       initialDocuments: [],
-    });
+      toolConfigs: {}, // Initialize empty tool configs
+    });    
     const [shareUrl, setShareUrl] = useState('');
     const [isCreating, setIsCreating] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -212,6 +216,7 @@ export default function AdminPage() {
             initialInstructions: config.initialInstructions,
             initialDocuments: config.initialDocuments || [],
             tools: config.tools || [],
+            toolConfigs: config.toolConfigs || {} 
         };
 
         if (editingBot === 'welcome-emissary') {
@@ -298,6 +303,7 @@ const handleCreateShare = async () => {
           initialMessage: config.initialMessage,
           initialInstructions: config.initialInstructions,
           tools: config.tools || [],
+          toolConfigs: config.toolConfigs || {}
       };
 
       const shareId = await FirebaseService.createShareConfig(currentUser.uid, shareConfig);
@@ -575,6 +581,16 @@ const handleDuplicateBot = async (bot: UserBot) => {
   }
 };
 
+const handleToolConfigChange = (toolId: string, toolConfig: Record<string, any>) => {
+  setConfig(prev => ({
+    ...prev,
+    toolConfigs: {
+      ...(prev.toolConfigs || {}),
+      [toolId]: toolConfig
+    }
+  }));
+};
+
 return (
   <div className="flex min-h-screen bg-background">
     <SidebarProvider>
@@ -775,6 +791,8 @@ return (
                 <Label>Tools & Features</Label>
                 <ToolSelector 
                   selectedTools={config.tools || []}
+                  toolConfigs={config.toolConfigs}
+                  onConfigChange={handleToolConfigChange}
                   onChange={(tools) => setConfig(prev => ({
                     ...prev,
                     tools

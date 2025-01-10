@@ -47,7 +47,7 @@ service cloud.firestore {
     function isValidChatDocument() {
       let incomingData = request.resource.data;
       let requiredFields = ['adminEmail', 'botId'];
-      let optionalFields = ['botName', 'initialDocuments', 'metadata', 'senderName', 'recipientName', 'initialMessage', 'initialInstructions'];
+      let optionalFields = ['botName', 'initialDocuments', 'metadata', 'senderName', 'recipientName', 'initialMessage', 'initialInstructions', 'tools', 'toolConfigs'];
       let allowedFields = requiredFields.concat(optionalFields);
       
       return incomingData.keys().hasAll(requiredFields) &&

@@ -53,7 +53,7 @@ interface MessageFilter {
     updatedAt: number;
     isTemplate: boolean;
     tools?: string[]; // Add tools array
-
+    toolConfigs?: Record<string, Record<string, any>>;
   }
 
   // all bots a user has access to
@@ -73,6 +73,7 @@ interface MessageFilter {
     usageCount: number;
     lastAccessedAt: Date;
     tools?: string[];
+    toolConfigs?: Record<string, Record<string, any>>;
   }
   
   export interface ShareMetadata {
@@ -450,6 +451,7 @@ static async updateWelcomeBot(config: any) {
         botName: shareConfig.botName || "Emissary Helper",
         initialDocuments: shareConfig.initialDocuments || [],
         tools: shareConfig.tools || [], // Include tools from share data
+        toolConfigs: shareConfig.toolConfigs || {},
         metadata: {
           createdAt: timestamp,
           updatedAt: timestamp,
@@ -477,11 +479,24 @@ static async updateWelcomeBot(config: any) {
   static async updateShareConfig(userId: string, shareId: string, updates: Partial<ShareConfig>): Promise<void> {
     if (typeof window === 'undefined') throw new Error('This method can only be used in the browser');
     try {
+      const batch = writeBatch(this.db);
+  
+      // Update share config
       const shareRef = doc(this.db, 'userConfigs', userId, 'shares', shareId);
-      await setDoc(shareRef, {
+      batch.update(shareRef, {
         ...updates,
         'metadata.updatedAt': Date.now()
-      }, { merge: true });
+      });
+  
+      // Update chat document with tool configurations
+      const chatRef = doc(this.db, 'chatMessages', shareId);
+      batch.update(chatRef, {
+        tools: updates.tools || [],
+        toolConfigs: updates.toolConfigs || {},
+        'metadata.updatedAt': Date.now()
+      });
+  
+      await batch.commit();
     } catch (error: any) {
       this.handleError(error, 'Updating share config');
       throw error;

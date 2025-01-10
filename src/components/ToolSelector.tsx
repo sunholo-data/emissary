@@ -15,6 +15,7 @@ import type { CustomComponent } from '@/components/markdown/types';
 import type { RechartsPlotData, RechartsPlotLayout } from '@/components/markdown/Plot';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import ToolConfigurator, { ToolConfig, ConfigField } from '@/components/ToolConfigurator';
 import GoogleDemo from "@/components/demos/GoogleDemo";
 import CodeExecutionDemo from '@/components/demos/CodeExecutionDemo';
 import NetworkGraphDemo from '@/components/demos/NetworkGraphDemo';
@@ -30,11 +31,14 @@ interface Tool {
   component?: CustomComponent;
   demo: React.ComponentType;
   isPremium?: boolean; 
+  configFields?: ConfigField[];
 }
 
 interface ToolSelectorProps {
   selectedTools: string[];
   onChange: (tools: string[]) => void;
+  toolConfigs?: Record<string, Record<string, any>>; 
+  onConfigChange?: (toolId: string, config: Record<string, any>) => void; 
   defaultTools?: string[];
   defaultOpen?: boolean; 
 }
@@ -282,6 +286,31 @@ const AVAILABLE_TOOLS: Tool[] = [
       </div>
     )
 },
+{
+  id: 'file-browser',
+  name: 'File Browser',
+  description: 'Select files from cloud storage',
+  category: 'Integration',
+  icon: Folder,
+  isPremium: true,
+  demo: FileBrowserDemo,
+  configFields: [
+    {
+      key: 'bucketUrl',
+      label: 'Storage Bucket URL',
+      type: 'text',
+      placeholder: 'gs://your-bucket-name',
+      required: true
+    },
+    {
+      key: 'rootPath',
+      label: 'Root Path',
+      type: 'text',
+      placeholder: '/',
+      required: false
+    }
+  ]
+ },
  {
     id: 'advanced_models',
     name: 'Advanced Models',
@@ -308,15 +337,7 @@ const AVAILABLE_TOOLS: Tool[] = [
       </div>
     )
  },
- {
-  id: 'file-browser',
-  name: 'File Browser',
-  description: 'Select files from cloud storage',
-  category: 'Integration',
-  icon: Folder,
-  isPremium: true,
-  demo: FileBrowserDemo
- }
+
 ];
 
 const CATEGORIES = Array.from(new Set(AVAILABLE_TOOLS.map(tool => tool.category)));
@@ -324,6 +345,8 @@ const CATEGORIES = Array.from(new Set(AVAILABLE_TOOLS.map(tool => tool.category)
 export default function ToolSelector({ 
     selectedTools, 
     onChange,
+    toolConfigs = {},
+    onConfigChange,
     defaultTools = ['preview','highlights', 'plots', 'alerts', 'tooltips'], // Default tools that should be on
     defaultOpen = false // Start collapsed
   }: ToolSelectorProps) {
@@ -338,6 +361,9 @@ export default function ToolSelector({
         }
     }, []);
 
+    const handleConfigUpdate = (toolId: string, config: Record<string, any>) => {
+      onConfigChange?.(toolId, config);
+    };
 
     const toggleTool = (toolId: string) => {
       onChange(
@@ -422,21 +448,21 @@ export default function ToolSelector({
               </div>
             </div>
   
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Tools List */}
-              <div>
-                <Label className="mb-2 block">Available Tools</Label>
-                <Card>
-                  <ScrollArea className="h-[400px]">
-                    {filteredTools.map((tool) => (
-                      <div
-                        key={tool.id}
-                        className={cn(
-                          "flex items-start p-3 gap-3 cursor-pointer hover:bg-accent",
-                          activeDemoId === tool.id && "bg-accent"
-                        )}
-                        onClick={() => setActiveDemoId(tool.id)}
-                      >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <Label className="mb-2 block">Available Tools</Label>
+              <Card>
+                <ScrollArea className="h-[400px]">
+                  {filteredTools.map((tool) => (
+                    <div
+                      key={tool.id}
+                      className={cn(
+                        "flex flex-col p-3 gap-3 cursor-pointer hover:bg-accent",
+                        activeDemoId === tool.id && "bg-accent"
+                      )}
+                      onClick={() => setActiveDemoId(tool.id)}
+                    >
+                      <div className="flex items-start gap-3">
                         <div 
                           className={cn(
                             "w-4 h-4 mt-1 rounded border flex items-center justify-center",
@@ -458,20 +484,31 @@ export default function ToolSelector({
                             <tool.icon className="h-4 w-4" />
                             <span className="truncate">{tool.name}</span>
                             {tool.isPremium && (
-                                <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-                                    PRO
-                                </Badge>
-                                )}
+                              <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                                PRO
+                              </Badge>
+                            )}
                           </div>
                           <div className="text-xs text-muted-foreground truncate">
                             {tool.description}
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </ScrollArea>
-                </Card>
-              </div>
+                      
+                      {/* Add configuration UI when tool is selected and has config fields */}
+                      {selectedTools.includes(tool.id) && tool.configFields && (
+                        <ToolConfigurator
+                          toolId={tool.id}
+                          currentConfig={toolConfigs[tool.id]}
+                          onConfigUpdate={handleConfigUpdate}
+                          configFields={tool.configFields}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </ScrollArea>
+              </Card>
+            </div>
   
               {/* Demo Preview */}
               <div className="w-full lg:max-w-[400px]"> {/* Constrain width on desktop */}
