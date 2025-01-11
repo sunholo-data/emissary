@@ -81,7 +81,8 @@ export default function Emissary({
     initialMessage,
     initialInstructions,
     tools,
-    toolConfigs
+    toolConfigs,
+    selectedItems
   });
 
   const { toast } = useToast();
@@ -93,6 +94,14 @@ export default function Emissary({
   const handleFileSelection = (items: SelectedItem[]) => {
     setSelectedItems(items);
   };
+
+  // update when selected items change for file-explorer tool
+  useEffect(() => {
+    setConfig(prev => ({
+      ...prev,
+      selectedItems
+    }));
+  }, [selectedItems]);
 
   // Update config when shareId or user changes
   useEffect(() => {
@@ -233,7 +242,6 @@ export default function Emissary({
       
       setBotMessages(prev => [...prev, userMessage]);
       setInput('');
-      setSelectedItems([]);
       
       // Start streaming with slight delay to ensure user message renders
       setTimeout(async () => {

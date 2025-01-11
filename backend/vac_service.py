@@ -102,9 +102,11 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
     emissaryConfig = kwargs.get('emissaryConfig')
     tools = []
     toolConfigs = {}
+    selectedItems = [] # for file-explorer tool
     if emissaryConfig is not None:
         tools = emissaryConfig.get('tools')
         toolConfigs = emissaryConfig.get('toolConfigs')
+        selectedItems = emissaryConfig.get('selectedItems')
 
     contents = []
     
@@ -123,12 +125,16 @@ def vac_stream(question: str, vector_name:str, chat_history=[], callback=None, *
             contents.append({"role":"user", "parts":[{"text": human}]})
         if ai:
             contents.append({"role":"model", "parts":[{"text": ai}]})
+    
+    initial_question = question
+    if tools:
+        initial_question = f"<question>{question}</question> You have been given access to these tools:<tools>{tools}</tools>"
+    if toolConfigs:
+        initial_question = f"{initial_question} The tools have been configured with these settings:<toolconfig>{toolConfigs}</toolconfig>"
+    if selectedItems:
+        initial_question = f"{initial_question} The file-browser tool was used to select these items: <selectedItems>{selectedItems}<selectedItems>"
 
-    contents.append({"role": "user", 
-                     "parts":[
-                            {"text": f"{question} - you also have access to these tools: {tools} with these configurations: {toolConfigs}"}
-                         ]
-                    })
+    contents.append({"role": "user", "parts":[ {"text": initial_question} ] })
 
     first_response = first_impression(contents, instructions=instructions, trace=trace)
     log.info(f"First response: {first_response}")

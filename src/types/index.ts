@@ -1,5 +1,6 @@
 // src/types/index.ts
 import { FileText, Image as ImageIcon, FileSpreadsheet, FileCode, Video, Music, File } from 'lucide-react';
+import type { SelectedItem, FileBrowserButtonProps } from '@/types/file-browser';
 
 export type UserState = 'not-logged-in' | 'receiver' | 'admin';
 
@@ -89,6 +90,7 @@ export interface BaseConfigProps {
   initialInstructions?: string;
   tools?: string[]; 
   toolConfigs?: Record<string, Record<string, any>>;
+  selectedItems?: SelectedItem[];
 }
 
 // Full config type that includes shareId - used for the final/complete config
